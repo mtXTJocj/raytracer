@@ -1,3 +1,5 @@
+use super::approx_eq;
+
 /// 3 次元空間内のベクトル (x, y, z) を示す。
 #[derive(Debug, Clone)]
 pub struct Vector3D {
@@ -15,6 +17,20 @@ impl Vector3D {
     /// * `z` - z
     pub fn new(x: f32, y: f32, z: f32) -> Self {
         Vector3D { x, y, z }
+    }
+}
+
+impl PartialEq for Vector3D {
+    /// 2 つの Vector3D が等しいかをテストする。
+    /// float 同士の比較なので、ある程度の誤差を許容する。
+    ///
+    /// # Argumets
+    ///
+    /// * `other` - 比較対象となる Vector3D
+    fn eq(&self, other: &Vector3D) -> bool {
+        approx_eq(self.x, other.x)
+            && approx_eq(self.y, other.y)
+            && approx_eq(self.z, other.z)
     }
 }
 
