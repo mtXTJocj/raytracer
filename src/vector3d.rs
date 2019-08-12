@@ -39,7 +39,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_vector() {
+    fn vector_creation() {
         let vector = Vector3D::new(4.3, -4.2, 3.1);
         assert_eq!(4.3, vector.x);
         assert_eq!(-4.2, vector.y);
