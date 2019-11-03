@@ -1,3 +1,4 @@
+pub mod color;
 pub mod point3d;
 pub mod vector3d;
 
