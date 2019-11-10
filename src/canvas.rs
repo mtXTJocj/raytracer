@@ -1,13 +1,24 @@
 use super::color::Color;
 use std::io::{Result, Write};
 
+/// 2 次元のイメージを表す。
+/// 左上が原点
 pub struct Canvas {
+    /// 幅
     width: usize,
+    /// 高さ
     height: usize,
+    /// 色の配列
     colors: Vec<Color>,
 }
 
 impl Canvas {
+    /// Canvas を作成する
+    /// 作成時は黒で塗りつぶされている
+    ///
+    /// # Argumets
+    /// * `width` - 幅
+    /// * `height` - 高さ
     pub fn new(width: usize, height: usize) -> Self {
         Canvas {
             width,
@@ -16,14 +27,21 @@ impl Canvas {
         }
     }
 
+    /// Canvas の幅
     pub fn width(&self) -> usize {
         self.width
     }
 
+    /// Canvas の高さ
     pub fn height(&self) -> usize {
         self.height
     }
 
+    /// Canvas の (x, y) における色を取得する
+    ///
+    /// # Argumets
+    /// * `x` - x
+    /// * `y` - y
     pub fn color_at(&self, x: usize, y: usize) -> &Color {
         assert!(x < self.width);
         assert!(y < self.height);
@@ -31,6 +49,11 @@ impl Canvas {
         &self.colors[self.width * y + x]
     }
 
+    /// Canvas の (x, y) における色を取得する
+    ///
+    /// # Argumets
+    /// * `x` - x
+    /// * `y` - y
     pub fn color_at_mut(&mut self, x: usize, y: usize) -> &mut Color {
         assert!(x < self.width);
         assert!(y < self.height);
@@ -38,6 +61,14 @@ impl Canvas {
         &mut self.colors[self.width * y + x]
     }
 
+    /// Canvas の内容を PPM 形式にして出力する。
+    /// 出力に成功した場合、出力したバイト数を返す。
+    ///
+    /// # Argumets
+    /// * `dst` - 出力先
+    ///
+    /// # Failures
+    /// 出力に失敗
     pub fn to_ppm(&self, dst: &mut dyn Write) -> Result<usize> {
         let mut result = 0;
         result += dst.write(
