@@ -1,4 +1,5 @@
 use super::color::Color;
+use std::io::{Result, Write};
 
 pub struct Canvas {
     width: usize,
@@ -36,6 +37,26 @@ impl Canvas {
 
         &mut self.colors[self.width * y + x]
     }
+
+    pub fn to_ppm(&self, dst: &mut dyn Write) -> Result<usize> {
+        let mut result = 0;
+        result += dst.write(
+            format!("P3\n{} {}\n255\n", self.width, self.height).as_bytes(),
+        )?;
+
+        for i in 0..self.height {
+            for j in 0..self.width {
+                let c = self.color_at(j, i);
+                let r = (c.red * 255.0).round().min(255.0).max(0.0) as u8;
+                let g = (c.green * 255.0).round().min(255.0).max(0.0) as u8;
+                let b = (c.blue * 255.0).round().min(255.0).max(0.0) as u8;
+
+                result +=
+                    dst.write(format!("{} {} {}\n", r, g, b).as_bytes())?;
+            }
+        }
+        Ok(result)
+    }
 }
 
 #[cfg(test)]
@@ -68,5 +89,110 @@ mod tests {
         assert_eq!(red, *c.color_at(2, 3));
         *c.color_at_mut(9, 19) = red;
         assert_eq!(red, *c.color_at(9, 19));
+    }
+
+    #[test]
+    fn constructing_the_ppm_header() {
+        let c = Canvas::new(5, 3);
+        let mut dst: Vec<u8> = Vec::new();
+
+        let _result = c.to_ppm(&mut dst).unwrap();
+        assert_eq!(
+            r"P3
+5 3
+255
+"
+            .as_bytes(),
+            &dst[..11]
+        );
+    }
+
+    #[test]
+    fn constructing_the_ppm_pixel_data() {
+        let mut c = Canvas::new(5, 3);
+        let mut dst: Vec<u8> = Vec::new();
+
+        dst.clear();
+        *c.color_at_mut(0, 0) = Color::new(1.5, 0.0, 0.0);
+        *c.color_at_mut(2, 1) = Color::new(0.0, 0.5, 0.0);
+        *c.color_at_mut(4, 2) = Color::new(-0.5, 0.0, 1.0);
+        let _result = c.to_ppm(&mut dst).unwrap();
+        assert_eq!(
+            r"P3
+5 3
+255
+255 0 0
+0 0 0
+0 0 0
+0 0 0
+0 0 0
+0 0 0
+0 0 0
+0 128 0
+0 0 0
+0 0 0
+0 0 0
+0 0 0
+0 0 0
+0 0 0
+0 0 255
+"
+            .as_bytes(),
+            &dst[..]
+        );
+    }
+
+    #[test]
+    fn splitting_long_lines_in_ppm_files() {
+        let width = 10;
+        let height = 2;
+        let mut c = Canvas::new(width, height);
+
+        for y in 0..height {
+            for x in 0..width {
+                *c.color_at_mut(x, y) = Color::new(1.0, 0.8, 0.6);
+            }
+        }
+
+        let mut ppm = Vec::new();
+        let _result = c.to_ppm(&mut ppm);
+
+        assert_eq!(
+            r"P3
+10 2
+255
+255 204 153
+255 204 153
+255 204 153
+255 204 153
+255 204 153
+255 204 153
+255 204 153
+255 204 153
+255 204 153
+255 204 153
+255 204 153
+255 204 153
+255 204 153
+255 204 153
+255 204 153
+255 204 153
+255 204 153
+255 204 153
+255 204 153
+255 204 153
+"
+            .as_bytes(),
+            &ppm[..]
+        );
+    }
+
+    #[test]
+    fn ppm_files_are_terminated_by_a_newline_character() {
+        let mut ppm = Vec::new();
+        let c = Canvas::new(5, 3);
+        let _result = c.to_ppm(&mut ppm);
+
+        assert_eq!('\n', char::from(ppm[ppm.len() - 1]));
     }
 }
