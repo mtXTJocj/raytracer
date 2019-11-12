@@ -1,6 +1,6 @@
-use std::cmp::PartialEq;
+use std::{cmp::PartialEq, ops::Mul};
 
-use super::approx_eq;
+use super::{approx_eq, point3d::Point3D, vector3d::Vector3D};
 
 #[derive(Debug)]
 pub struct Matrix4x4 {
@@ -25,6 +25,58 @@ impl PartialEq for Matrix4x4 {
             .iter()
             .zip(other.m.iter())
             .fold(true, |result, (a, b)| result && approx_eq(*a, *b))
+    }
+}
+
+impl Mul<&Matrix4x4> for &Matrix4x4 {
+    type Output = Matrix4x4;
+
+    fn mul(self, mat: &Matrix4x4) -> Self::Output {
+        let mut m = [0.0; 16];
+
+        for r in 0..4 {
+            for c in 0..4 {
+                m[r * 4 + c] = self.at(r, 0) * mat.at(0, c)
+                    + self.at(r, 1) * mat.at(1, c)
+                    + self.at(r, 2) * mat.at(2, c)
+                    + self.at(r, 3) * mat.at(3, c);
+            }
+        }
+
+        Matrix4x4::new(m)
+    }
+}
+
+impl Mul<&Point3D> for &Matrix4x4 {
+    type Output = Point3D;
+
+    fn mul(self, p: &Point3D) -> Self::Output {
+        let x = self.at(0, 0) * p.x
+            + self.at(0, 1) * p.y
+            + self.at(0, 2) * p.z
+            + self.at(0, 3);
+        let y = self.at(1, 0) * p.x
+            + self.at(1, 1) * p.y
+            + self.at(1, 2) * p.z
+            + self.at(1, 3);
+        let z = self.at(2, 0) * p.x
+            + self.at(2, 1) * p.y
+            + self.at(2, 2) * p.z
+            + self.at(2, 3);
+
+        Point3D::new(x, y, z)
+    }
+}
+
+impl Mul<&Vector3D> for &Matrix4x4 {
+    type Output = Vector3D;
+
+    fn mul(self, p: &Vector3D) -> Self::Output {
+        let x = self.at(0, 0) * p.x + self.at(0, 1) * p.y + self.at(0, 2) * p.z;
+        let y = self.at(1, 0) * p.x + self.at(1, 1) * p.y + self.at(1, 2) * p.z;
+        let z = self.at(2, 0) * p.x + self.at(2, 1) * p.y + self.at(2, 2) * p.z;
+
+        Vector3D::new(x, y, z)
     }
 }
 
@@ -72,5 +124,47 @@ mod tests {
         ]);
 
         assert_ne!(m0, m1);
+    }
+
+    #[test]
+    fn multiplying_two_matrices() {
+        let mat_a = Matrix4x4::new([
+            1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 8.0, 7.0, 6.0, 5.0,
+            4.0, 3.0, 2.0,
+        ]);
+        let mat_b = Matrix4x4::new([
+            -2.0, 1.0, 2.0, 3.0, 3.0, 2.0, 1.0, -1.0, 4.0, 3.0, 6.0, 5.0, 1.0,
+            2.0, 7.0, 8.0,
+        ]);
+
+        assert_eq!(
+            Matrix4x4::new([
+                20.0, 22.0, 50.0, 48.0, 44.0, 54.0, 114.0, 108.0, 40.0, 58.0,
+                110.0, 102.0, 16.0, 26.0, 46.0, 42.0
+            ]),
+            &mat_a * &mat_b
+        );
+    }
+
+    #[test]
+    fn a_matrix_multiplied_by_a_point() {
+        let mat_a = Matrix4x4::new([
+            1.0, 2.0, 3.0, 4.0, 2.0, 4.0, 4.0, 2.0, 8.0, 6.0, 4.0, 1.0, 0.0,
+            0.0, 0.0, 1.0,
+        ]);
+        let p = Point3D::new(1.0, 2.0, 3.0);
+
+        assert_eq!(Point3D::new(18.0, 24.0, 33.0), &mat_a * &p);
+    }
+
+    #[test]
+    fn a_matrix_multiplied_by_a_vector() {
+        let mat_a = Matrix4x4::new([
+            1.0, 2.0, 3.0, 4.0, 2.0, 4.0, 4.0, 2.0, 8.0, 6.0, 4.0, 1.0, 0.0,
+            0.0, 0.0, 1.0,
+        ]);
+        let v = Vector3D::new(1.0, 2.0, 3.0);
+
+        assert_eq!(Vector3D::new(14.0, 22.0, 32.0), &mat_a * &v);
     }
 }
