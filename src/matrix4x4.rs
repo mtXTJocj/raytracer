@@ -12,6 +12,15 @@ impl Matrix4x4 {
         Matrix4x4 { m }
     }
 
+    pub fn identity() -> Self {
+        Matrix4x4 {
+            m: [
+                1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0,
+                0.0, 0.0, 0.0, 1.0,
+            ],
+        }
+    }
+
     pub fn at(&self, row: usize, column: usize) -> f32 {
         debug_assert!(row < 4 && column < 4);
 
@@ -166,5 +175,30 @@ mod tests {
         let v = Vector3D::new(1.0, 2.0, 3.0);
 
         assert_eq!(Vector3D::new(14.0, 22.0, 32.0), &mat_a * &v);
+    }
+
+    #[test]
+    fn multiplying_a_matrix_by_the_identity_matrix() {
+        let m = [
+            0.0, 1.0, 2.0, 4.0, 1.0, 2.0, 4.0, 8.0, 2.0, 4.0, 8.0, 16.0, 4.0,
+            8.0, 16.0, 32.0,
+        ];
+        let mat_a = Matrix4x4::new(m);
+
+        assert_eq!(mat_a, &mat_a * &Matrix4x4::identity());
+    }
+
+    #[test]
+    fn multiplying_the_identity_matrix_by_a_point() {
+        let p = Point3D::new(1.0, 2.0, 3.0);
+
+        assert_eq!(p, &Matrix4x4::identity() * &p);
+    }
+
+    #[test]
+    fn multiplying_the_identity_matrix_by_a_vector() {
+        let v = Vector3D::new(1.0, 2.0, 3.0);
+
+        assert_eq!(v, &Matrix4x4::identity() * &v);
     }
 }
