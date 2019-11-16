@@ -70,6 +70,25 @@ impl Matrix4x4 {
     fn determinant(&self) -> f32 {
         (0..4).map(|i| self.m[i] * self.cofactor(0, i)).sum()
     }
+
+    pub fn inverse(&self) -> Self {
+        let det = self.determinant();
+        if det == 0.0 {
+            panic!();
+        }
+
+        let inv_det = 1.0 / det;
+        let mut m = [0.0; 16];
+        for row in 0..4 {
+            for col in 0..4 {
+                let c = self.cofactor(row, col);
+                // transpose するため、col と row を逆にしている
+                m[col * 4 + row] = c * inv_det
+            }
+        }
+
+        Matrix4x4::new(m)
+    }
 }
 
 impl PartialEq for Matrix4x4 {
@@ -423,5 +442,95 @@ mod tests {
             0.0, 0.0, 0.0, 0.0,
         ]);
         assert_eq!(0.0, mat.determinant());
+    }
+
+    #[test]
+    fn calculating_the_inverse_of_a_matrix() {
+        let mat = Matrix4x4::new([
+            -5.0, 2.0, 6.0, -8.0, 1.0, -5.0, 1.0, 8.0, 7.0, 7.0, -6.0, -7.0,
+            1.0, -3.0, 7.0, 4.0,
+        ]);
+        assert_eq!(
+            Matrix4x4::new([
+                0.2180451,
+                0.4511278,
+                0.2406015,
+                -0.0451127,
+                -0.8082707,
+                -1.456767,
+                -0.4436090,
+                0.520676,
+                -0.07894736,
+                -0.223684,
+                -0.0526315,
+                0.1973684,
+                -0.5225563,
+                -0.8139097,
+                -0.3007518,
+                0.3063909,
+            ]),
+            mat.inverse()
+        );
+    }
+
+    #[test]
+    fn calculating_the_inverse_of_another_matrix() {
+        let mat = Matrix4x4::new([
+            8.0, -5.0, 9.0, 2.0, 7.0, 5.0, 6.0, 1.0, -6.0, 0.0, 9.0, 6.0, -3.0,
+            0.0, -9.0, -4.0,
+        ]);
+        assert_eq!(
+            Matrix4x4::new([
+                -0.1538461, -0.1538461, -0.282051, -0.5384615, -0.0769230,
+                0.1230769, 0.02564102, 0.0307692, 0.3589743, 0.3589743,
+                0.4358974, 0.923076, -0.692307, -0.692307, -0.769230,
+                -1.923076
+            ]),
+            mat.inverse()
+        )
+    }
+
+    #[test]
+    fn calculating_the_inverse_of_third_matrix() {
+        let mat = Matrix4x4::new([
+            9.0, 3.0, 0.0, 9.0, -5.0, -2.0, -6.0, -3.0, -4.0, 9.0, 6.0, 4.0,
+            -7.0, 6.0, 6.0, 2.0,
+        ]);
+        assert_eq!(
+            Matrix4x4::new([
+                -0.04074,
+                -0.077777,
+                0.144444,
+                -0.222222,
+                -0.0777778,
+                0.0333333,
+                0.366666,
+                -0.3333333,
+                -0.02901234,
+                -0.1462962,
+                -0.10926,
+                0.12963,
+                0.1777777,
+                0.066666,
+                -0.266666,
+                0.3333333
+            ]),
+            mat.inverse()
+        );
+    }
+
+    #[test]
+    fn multiplying_a_product_by_its_inverse() {
+        let a = Matrix4x4::new([
+            3.0, -9.0, 7.0, 3.0, 3.0, -8.0, 2.0, -9.0, -4.0, 4.0, 4.0, 1.0,
+            -6.0, 5.0, -1.0, 1.0,
+        ]);
+        let b = Matrix4x4::new([
+            8.0, 2.0, 2.0, 2.0, 3.0, -1.0, 7.0, 0.0, 7.0, 0.0, 5.0, 4.0, 6.0,
+            -2.0, 0.0, 5.0,
+        ]);
+
+        let c = &a * &b;
+        assert_eq!(a, &c * &b.inverse());
     }
 }
