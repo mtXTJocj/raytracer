@@ -148,6 +148,10 @@ impl Matrix3x3 {
         }
         Matrix2x2::new(m)
     }
+
+    fn minor(&self, row: usize, column: usize) -> f32 {
+        self.submatrix(row, column).determinant()
+    }
 }
 
 /* ------------------------------------------------------------------------- */
@@ -328,5 +332,13 @@ mod tests {
             [-6.0, 1.0, 6.0, -8.0, 8.0, 6.0, -7.0, -1.0, 1.0],
             mat.submatrix(2, 1).m
         );
+    }
+
+    #[test]
+    fn calculating_a_minor_of_a_3x3_matrix() {
+        let mat =
+            Matrix3x3::new([3.0, 5.0, 0.0, 2.0, -1.0, -7.0, 6.0, -1.0, 5.0]);
+        assert_eq!(25.0, mat.submatrix(1, 0).determinant());
+        assert_eq!(25.0, mat.minor(1, 0));
     }
 }
