@@ -152,6 +152,15 @@ impl Matrix3x3 {
     fn minor(&self, row: usize, column: usize) -> f32 {
         self.submatrix(row, column).determinant()
     }
+
+    fn cofactor(&self, row: usize, column: usize) -> f32 {
+        let m = self.minor(row, column);
+        if (row + column) & 0x1 == 0 {
+            m
+        } else {
+            -m
+        }
+    }
 }
 
 /* ------------------------------------------------------------------------- */
@@ -340,5 +349,15 @@ mod tests {
             Matrix3x3::new([3.0, 5.0, 0.0, 2.0, -1.0, -7.0, 6.0, -1.0, 5.0]);
         assert_eq!(25.0, mat.submatrix(1, 0).determinant());
         assert_eq!(25.0, mat.minor(1, 0));
+    }
+
+    #[test]
+    fn calculating_a_cofactor_of_a_3x3_matrix() {
+        let mat =
+            Matrix3x3::new([3.0, 5.0, 0.0, 2.0, -1.0, -7.0, 6.0, -1.0, 5.0]);
+        assert_eq!(-12.0, mat.minor(0, 0));
+        assert_eq!(-12.0, mat.cofactor(0, 0));
+        assert_eq!(25.0, mat.minor(1, 0));
+        assert_eq!(-25.0, mat.cofactor(1, 0));
     }
 }
