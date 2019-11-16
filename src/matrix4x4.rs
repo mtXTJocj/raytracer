@@ -21,6 +21,16 @@ impl Matrix4x4 {
         }
     }
 
+    pub fn transpose(&self) -> Self {
+        let mut m = [0.0; 16];
+        for r in 0..4 {
+            for c in 0..4 {
+                m[c * 4 + r] = self.m[r * 4 + c]
+            }
+        }
+        Matrix4x4 { m }
+    }
+
     pub fn at(&self, row: usize, column: usize) -> f32 {
         debug_assert!(row < 4 && column < 4);
 
@@ -200,5 +210,28 @@ mod tests {
         let v = Vector3D::new(1.0, 2.0, 3.0);
 
         assert_eq!(v, &Matrix4x4::identity() * &v);
+    }
+
+    #[test]
+    fn transposing_a_matrix() {
+        let mat = Matrix4x4::new([
+            0.0, 9.0, 3.0, 0.0, 9.0, 8.0, 0.0, 8.0, 1.0, 8.0, 5.0, 3.0, 0.0,
+            0.0, 5.0, 8.0,
+        ]);
+        let mat = mat.transpose();
+        assert_eq!(
+            Matrix4x4::new([
+                0.0, 9.0, 1.0, 0.0, 9.0, 8.0, 8.0, 0.0, 3.0, 0.0, 5.0, 5.0,
+                0.0, 8.0, 3.0, 8.0
+            ]),
+            mat
+        );
+    }
+
+    #[test]
+    fn transposing_the_identity_matrix() {
+        let mat = Matrix4x4::identity();
+        let mat = mat.transpose();
+        assert_eq!(Matrix4x4::identity(), mat);
     }
 }
