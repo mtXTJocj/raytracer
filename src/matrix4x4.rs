@@ -36,6 +36,23 @@ impl Matrix4x4 {
 
         self.m[row * 4 + column]
     }
+
+    fn submatrix(&self, row: usize, column: usize) -> Matrix3x3 {
+        let mut m = [0.0; 9];
+
+        let mut i = 0;
+        for r in 0..4 {
+            if r != row {
+                for c in 0..4 {
+                    if c != column {
+                        m[i] = self.at(r, c);
+                        i += 1;
+                    }
+                }
+            }
+        }
+        Matrix3x3::new(m)
+    }
 }
 
 impl PartialEq for Matrix4x4 {
@@ -96,6 +113,40 @@ impl Mul<&Vector3D> for &Matrix4x4 {
         let z = self.at(2, 0) * p.x + self.at(2, 1) * p.y + self.at(2, 2) * p.z;
 
         Vector3D::new(x, y, z)
+    }
+}
+
+/* ------------------------------------------------------------------------- */
+
+#[derive(Debug)]
+struct Matrix3x3 {
+    m: [f32; 9],
+}
+
+impl Matrix3x3 {
+    fn new(m: [f32; 9]) -> Self {
+        Matrix3x3 { m }
+    }
+
+    fn at(&self, row: usize, column: usize) -> f32 {
+        self.m[row * 3 + column]
+    }
+
+    fn submatrix(&self, row: usize, column: usize) -> Matrix2x2 {
+        let mut m = [0.0; 4];
+
+        let mut i = 0;
+        for r in 0..3 {
+            if r != row {
+                for c in 0..3 {
+                    if c != column {
+                        m[i] = self.at(r, c);
+                        i += 1;
+                    }
+                }
+            }
+        }
+        Matrix2x2::new(m)
     }
 }
 
@@ -258,5 +309,24 @@ mod tests {
     fn calculating_the_determinant_of_a_2x2_matrix() {
         let mat = Matrix2x2::new([1.0, 5.0, -3.0, 2.0]);
         assert_eq!(17.0, mat.determinant());
+    }
+
+    #[test]
+    fn a_submatrix_of_a_3x3_matrix_is_a_2x2_matrix() {
+        let mat =
+            Matrix3x3::new([1.0, 5.0, 0.0, -3.0, 2.0, 7.0, 0.0, 6.0, -3.0]);
+        assert_eq!([-3.0, 2.0, 0.0, 6.0], mat.submatrix(0, 2).m);
+    }
+
+    #[test]
+    fn a_submatrix_of_a_4x4_matrix_is_a_3x3_matrix() {
+        let mat = Matrix4x4::new([
+            -6.0, 1.0, 1.0, 6.0, -8.0, 5.0, 8.0, 6.0, -1.0, 0.0, 8.0, 2.0,
+            -7.0, 1.0, -1.0, 1.0,
+        ]);
+        assert_eq!(
+            [-6.0, 1.0, 6.0, -8.0, 8.0, 6.0, -7.0, -1.0, 1.0],
+            mat.submatrix(2, 1).m
+        );
     }
 }
