@@ -161,6 +161,10 @@ impl Matrix3x3 {
             -m
         }
     }
+
+    fn determinant(&self) -> f32 {
+        (0..3).map(|i| self.m[i] * self.cofactor(0, i)).sum()
+    }
 }
 
 /* ------------------------------------------------------------------------- */
@@ -359,5 +363,16 @@ mod tests {
         assert_eq!(-12.0, mat.cofactor(0, 0));
         assert_eq!(25.0, mat.minor(1, 0));
         assert_eq!(-25.0, mat.cofactor(1, 0));
+    }
+
+    #[test]
+    fn calculating_the_determinant_of_a_3x3_matrix() {
+        let mat =
+            Matrix3x3::new([1.0, 2.0, 6.0, -5.0, 8.0, -4.0, 2.0, 6.0, 4.0]);
+
+        assert_eq!(56.0, mat.cofactor(0, 0));
+        assert_eq!(12.0, mat.cofactor(0, 1));
+        assert_eq!(-46.0, mat.cofactor(0, 2));
+        assert_eq!(-196.0, mat.determinant());
     }
 }
