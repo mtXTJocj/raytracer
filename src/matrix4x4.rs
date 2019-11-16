@@ -99,6 +99,25 @@ impl Mul<&Vector3D> for &Matrix4x4 {
     }
 }
 
+/* ------------------------------------------------------------------------- */
+
+#[derive(Debug)]
+struct Matrix2x2 {
+    m: [f32; 4],
+}
+
+impl Matrix2x2 {
+    fn new(m: [f32; 4]) -> Self {
+        Matrix2x2 { m }
+    }
+
+    fn determinant(&self) -> f32 {
+        self.m[0] * self.m[3] - self.m[1] * self.m[2]
+    }
+}
+
+/* ------------------------------------------------------------------------- */
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -233,5 +252,11 @@ mod tests {
         let mat = Matrix4x4::identity();
         let mat = mat.transpose();
         assert_eq!(Matrix4x4::identity(), mat);
+    }
+
+    #[test]
+    fn calculating_the_determinant_of_a_2x2_matrix() {
+        let mat = Matrix2x2::new([1.0, 5.0, -3.0, 2.0]);
+        assert_eq!(17.0, mat.determinant());
     }
 }
