@@ -406,4 +406,22 @@ mod tests {
         assert_eq!(51.0, mat.cofactor(0, 3));
         assert_eq!(-4071.0, mat.determinant());
     }
+
+    #[test]
+    fn testing_an_invertible_matrix_for_invertibility() {
+        let mat = Matrix4x4::new([
+            6.0, 4.0, 4.0, 4.0, 5.0, 5.0, 7.0, 6.0, 4.0, -9.0, 3.0, -7.0, 9.0,
+            1.0, 7.0, -6.0,
+        ]);
+        assert_eq!(-2120.0, mat.determinant());
+    }
+
+    #[test]
+    fn testing_a_noninvertible_matrix_for_invertibility() {
+        let mat = Matrix4x4::new([
+            -4.0, 2.0, -2.0, -3.0, 9.0, 6.0, 2.0, 6.0, 0.0, -5.0, 1.0, -5.0,
+            0.0, 0.0, 0.0, 0.0,
+        ]);
+        assert_eq!(0.0, mat.determinant());
+    }
 }
