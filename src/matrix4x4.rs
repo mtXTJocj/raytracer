@@ -53,6 +53,23 @@ impl Matrix4x4 {
         }
         Matrix3x3::new(m)
     }
+
+    fn minor(&self, row: usize, column: usize) -> f32 {
+        self.submatrix(row, column).determinant()
+    }
+
+    fn cofactor(&self, row: usize, column: usize) -> f32 {
+        let m = self.minor(row, column);
+        if (row + column) & 0x1 == 0 {
+            m
+        } else {
+            -m
+        }
+    }
+
+    fn determinant(&self) -> f32 {
+        (0..4).map(|i| self.m[i] * self.cofactor(0, i)).sum()
+    }
 }
 
 impl PartialEq for Matrix4x4 {
@@ -374,5 +391,19 @@ mod tests {
         assert_eq!(12.0, mat.cofactor(0, 1));
         assert_eq!(-46.0, mat.cofactor(0, 2));
         assert_eq!(-196.0, mat.determinant());
+    }
+
+    #[test]
+    fn calculating_the_determinant_of_a_4x4_matrix() {
+        let mat = Matrix4x4::new([
+            -2.0, -8.0, 3.0, 5.0, -3.0, 1.0, 7.0, 3.0, 1.0, 2.0, -9.0, 6.0,
+            -6.0, 7.0, 7.0, -9.0,
+        ]);
+
+        assert_eq!(690.0, mat.cofactor(0, 0));
+        assert_eq!(447.0, mat.cofactor(0, 1));
+        assert_eq!(210.0, mat.cofactor(0, 2));
+        assert_eq!(51.0, mat.cofactor(0, 3));
+        assert_eq!(-4071.0, mat.determinant());
     }
 }
