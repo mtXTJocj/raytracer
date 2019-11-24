@@ -2,16 +2,22 @@ use std::{cmp::PartialEq, ops::Mul};
 
 use super::{approx_eq, point3d::Point3D, vector3d::Vector3D};
 
+/// 4x4 行列を表す。
 #[derive(Debug)]
 pub struct Matrix4x4 {
     m: [f32; 16],
 }
 
 impl Matrix4x4 {
+    /// 新しい Vector3D を作成する
+    ///
+    /// # Argumets
+    /// * `m` - row-major で各要素を格納した配列
     pub fn new(m: [f32; 16]) -> Self {
         Matrix4x4 { m }
     }
 
+    /// 単位行列を作成する
     pub fn identity() -> Self {
         Matrix4x4 {
             m: [
@@ -21,6 +27,7 @@ impl Matrix4x4 {
         }
     }
 
+    /// self の転置行列を作成する
     pub fn transpose(&self) -> Self {
         let mut m = [0.0; 16];
         for r in 0..4 {
@@ -31,6 +38,11 @@ impl Matrix4x4 {
         Matrix4x4 { m }
     }
 
+    /// 行列の要素を取得する。
+    ///
+    /// # Argumets
+    /// * `row` - 行 [0, 3]
+    /// * `column` - 列 [0, 3]
     pub fn at(&self, row: usize, column: usize) -> f32 {
         debug_assert!(row < 4 && column < 4);
 
@@ -71,6 +83,7 @@ impl Matrix4x4 {
         (0..4).map(|i| self.m[i] * self.cofactor(0, i)).sum()
     }
 
+    /// self の逆行列を作成する。
     pub fn inverse(&self) -> Self {
         let det = self.determinant();
         if det == 0.0 {
@@ -92,6 +105,12 @@ impl Matrix4x4 {
 }
 
 impl PartialEq for Matrix4x4 {
+    /// 2 つの Matrix4x4 が等しいかをテストする。
+    /// float 同士の比較なので、ある程度の誤差を許容する。
+    ///
+    /// # Argumets
+    ///
+    /// * `other` - 比較対象となる Matrix4x4
     fn eq(&self, other: &Matrix4x4) -> bool {
         self.m
             .iter()
