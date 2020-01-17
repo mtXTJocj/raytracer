@@ -1,12 +1,20 @@
 use super::{matrix4x4::Matrix4x4, point3d::Point3D, vector3d::Vector3D};
 use std::ops::Mul;
 
+/// 座標変換を表す。
+#[derive(Debug)]
 pub struct Transform {
     mat: Matrix4x4,
     inv: Matrix4x4,
 }
 
 impl Transform {
+    /// 平行移動の変換を作成する
+    ///
+    /// # Argumets
+    /// * `x` - x 方向の移動量
+    /// * `y` - y 方向の移動量
+    /// * `z` - z 方向の移動量
     pub fn translation(x: f32, y: f32, z: f32) -> Self {
         let mat = Matrix4x4::new([
             1.0, 0.0, 0.0, x, 0.0, 1.0, 0.0, y, 0.0, 0.0, 1.0, z, 0.0, 0.0,
@@ -19,6 +27,12 @@ impl Transform {
         Transform { mat, inv }
     }
 
+    /// 拡大/縮小の変換を作成する
+    ///
+    /// # Argumets
+    /// * `x` - x 方向のスケール
+    /// * `y` - y 方向のスケール
+    /// * `z` - z 方向のスケール
     pub fn scaling(x: f32, y: f32, z: f32) -> Self {
         assert!(x != 0.0);
         assert!(y != 0.0);
@@ -49,6 +63,10 @@ impl Transform {
         Transform { mat, inv }
     }
 
+    /// x 軸まわりの回転を作成する
+    ///
+    /// # Argumets
+    /// * `a` - 回転角(rad)
     pub fn rotation_x(a: f32) -> Self {
         let mat = Matrix4x4::new([
             1.0,
@@ -72,6 +90,10 @@ impl Transform {
         Transform { mat, inv }
     }
 
+    /// y 軸まわりの回転を作成する
+    ///
+    /// # Argumets
+    /// * `a` - 回転角(rad)
     pub fn rotation_y(a: f32) -> Self {
         let mat = Matrix4x4::new([
             a.cos(),
@@ -95,6 +117,10 @@ impl Transform {
         Transform { mat, inv }
     }
 
+    /// z 軸まわりの回転を作成する
+    ///
+    /// # Argumets
+    /// * `a` - 回転角(rad)
     pub fn rotation_z(a: f32) -> Self {
         let mat = Matrix4x4::new([
             a.cos(),
@@ -118,6 +144,15 @@ impl Transform {
         Transform { mat, inv }
     }
 
+    /// 剪断用の変換を作成する
+    ///
+    /// # Argumets
+    /// * `xy` - y の変化量に対する x の変化量
+    /// * `xz` - z の変化量に対する x の変化量
+    /// * `yx` - x の変化量に対する y の変化量
+    /// * `yz` - z の変化量に対する y の変化量
+    /// * `zx` - x の変化量に対する z の変化量
+    /// * `zy` - y の変化量に対する z の変化量
     pub fn shearing(
         xy: f32,
         xz: f32,
@@ -134,6 +169,7 @@ impl Transform {
         Transform { mat, inv }
     }
 
+    /// 逆変換の行列を取得する
     pub fn inv(&self) -> &Matrix4x4 {
         &self.inv
     }
@@ -142,6 +178,10 @@ impl Transform {
 impl Mul<&Point3D> for &Transform {
     type Output = Point3D;
 
+    /// Point3D に対して変換を適用する
+    ///
+    /// # Arguments
+    /// * `x` 適用対象となる Point3D
     fn mul(self, x: &Point3D) -> Self::Output {
         &self.mat * x
     }
@@ -150,6 +190,10 @@ impl Mul<&Point3D> for &Transform {
 impl Mul<&Vector3D> for &Transform {
     type Output = Vector3D;
 
+    /// Vector3D に対して変換を適用する
+    ///
+    /// # Arguments
+    /// * `x` 適用対象となる Vector3D
     fn mul(self, x: &Vector3D) -> Self::Output {
         &self.mat * x
     }
@@ -158,6 +202,10 @@ impl Mul<&Vector3D> for &Transform {
 impl Mul<&Transform> for &Transform {
     type Output = Transform;
 
+    /// 2 つの Transform を合成する
+    ///
+    /// # Arguments
+    /// * `t` 右からかける Transform
     fn mul(self, t: &Transform) -> Self::Output {
         Transform {
             mat: &self.mat * &t.mat,
