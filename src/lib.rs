@@ -2,6 +2,7 @@ pub mod canvas;
 pub mod color;
 pub mod matrix4x4;
 pub mod point3d;
+pub mod transform;
 pub mod vector3d;
 
 const EPSILON: f32 = 0.0001;
