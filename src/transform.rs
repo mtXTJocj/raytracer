@@ -6,11 +6,6 @@ pub struct Transform {
     inv: Matrix4x4,
 }
 
-pub struct TransformRef<'a> {
-    mat: &'a Matrix4x4,
-    inv: &'a Matrix4x4,
-}
-
 impl Transform {
     pub fn translation(x: f32, y: f32, z: f32) -> Self {
         let mat = Matrix4x4::new([
@@ -139,11 +134,8 @@ impl Transform {
         Transform { mat, inv }
     }
 
-    pub fn inverse(&self) -> TransformRef {
-        TransformRef {
-            mat: &self.inv,
-            inv: &self.mat,
-        }
+    pub fn inv(&self) -> &Matrix4x4 {
+        &self.inv
     }
 }
 
@@ -163,22 +155,6 @@ impl Mul<&Vector3D> for &Transform {
     }
 }
 
-impl<'a> Mul<&Point3D> for &TransformRef<'a> {
-    type Output = Point3D;
-
-    fn mul(self, x: &Point3D) -> Self::Output {
-        self.mat * x
-    }
-}
-
-impl<'a> Mul<&Vector3D> for &TransformRef<'a> {
-    type Output = Vector3D;
-
-    fn mul(self, x: &Vector3D) -> Self::Output {
-        self.mat * x
-    }
-}
-
 impl Mul<&Transform> for &Transform {
     type Output = Transform;
 
@@ -186,39 +162,6 @@ impl Mul<&Transform> for &Transform {
         Transform {
             mat: &self.mat * &t.mat,
             inv: &t.inv * &self.inv,
-        }
-    }
-}
-
-impl<'a> Mul<&Transform> for &TransformRef<'a> {
-    type Output = Transform;
-
-    fn mul(self, t: &Transform) -> Self::Output {
-        Transform {
-            mat: self.mat * &t.mat,
-            inv: &t.inv * self.inv,
-        }
-    }
-}
-
-impl<'a> Mul<&TransformRef<'a>> for &Transform {
-    type Output = Transform;
-
-    fn mul(self, t: &TransformRef) -> Self::Output {
-        Transform {
-            mat: &self.mat * t.mat,
-            inv: t.inv * &self.inv,
-        }
-    }
-}
-
-impl<'a, 'b> Mul<&TransformRef<'a>> for &TransformRef<'b> {
-    type Output = Transform;
-
-    fn mul(self, t: &TransformRef) -> Self::Output {
-        Transform {
-            mat: self.mat * t.mat,
-            inv: t.inv * self.inv,
         }
     }
 }
@@ -240,7 +183,7 @@ mod tests {
         let t = Transform::translation(5.0, -3.0, 2.0);
         let p = Point3D::new(-3.0, 4.0, 5.0);
 
-        assert_eq!(Point3D::new(-8.0, 7.0, 3.0), &t.inverse() * &p);
+        assert_eq!(Point3D::new(-8.0, 7.0, 3.0), t.inv() * &p);
     }
 
     #[test]
@@ -272,7 +215,7 @@ mod tests {
         let t = Transform::scaling(2.0, 3.0, 4.0);
         let v = Vector3D::new(-4.0, 6.0, 8.0);
 
-        assert_eq!(Vector3D::new(-2.0, 2.0, 2.0), &t.inverse() * &v);
+        assert_eq!(Vector3D::new(-2.0, 2.0, 2.0), t.inv() * &v);
     }
 
     #[test]
@@ -303,7 +246,7 @@ mod tests {
 
         assert_eq!(
             Point3D::new(0.0, 2f32.sqrt() / 2.0, -2f32.sqrt() / 2.0),
-            &half_quarter.inverse() * &p
+            half_quarter.inv() * &p
         );
     }
 
