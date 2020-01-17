@@ -351,4 +351,15 @@ mod tests {
 
         assert_eq!(Point3D::new(15.0, 0.0, 7.0), &t * &p);
     }
+
+    #[test]
+    fn chained_inverse_transformations_must_be_applied_in_reverse_order() {
+        let p = Point3D::new(15.0, 0.0, 7.0);
+        let a = Transform::rotation_x(std::f32::consts::FRAC_PI_2);
+        let b = Transform::scaling(5.0, 5.0, 5.0);
+        let c = Transform::translation(10.0, 5.0, 7.0);
+        let t = &c * &(&b * &a);
+
+        assert_eq!(Point3D::new(1.0, 0.0, 1.0), t.inv() * &p);
+    }
 }
