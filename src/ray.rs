@@ -17,6 +17,10 @@ impl Ray {
     pub fn direction(&self) -> &Vector3D {
         &self.direction
     }
+
+    pub fn position(&self, t: f32) -> Point3D {
+        &self.origin + &(t * &self.direction)
+    }
 }
 
 #[cfg(test)]
@@ -31,5 +35,16 @@ mod tests {
 
         assert_eq!(origin, *r.origin());
         assert_eq!(direction, *r.direction());
+    }
+
+    #[test]
+    fn computing_a_point_from_a_distance() {
+        let ray =
+            Ray::new(Point3D::new(2.0, 3.0, 4.0), Vector3D::new(1.0, 0.0, 0.0));
+
+        assert_eq!(Point3D::new(2.0, 3.0, 4.0), ray.position(0.0));
+        assert_eq!(Point3D::new(3.0, 3.0, 4.0), ray.position(1.0));
+        assert_eq!(Point3D::new(1.0, 3.0, 4.0), ray.position(-1.0));
+        assert_eq!(Point3D::new(4.5, 3.0, 4.0), ray.position(2.5));
     }
 }
