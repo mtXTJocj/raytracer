@@ -1,5 +1,6 @@
 use super::{intersection::Intersection, point3d::Point3D, ray::Ray};
 
+#[derive(Debug)]
 pub struct Sphere {}
 
 impl Sphere {

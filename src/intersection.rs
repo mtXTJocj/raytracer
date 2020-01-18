@@ -1,5 +1,6 @@
 use super::sphere::Sphere;
 
+#[derive(Debug)]
 pub struct Intersection<'a> {
     pub t: f32,
     pub object: &'a Sphere,
