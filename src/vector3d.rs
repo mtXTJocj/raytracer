@@ -1,5 +1,4 @@
-use super::approx_eq;
-use super::point3d::Point3D;
+use super::{approx_eq, point3d::Point3D};
 use std::ops::{Add, Div, DivAssign, Mul, Neg, Sub};
 
 /// 3 次元空間内のベクトル (x, y, z) を示す。
@@ -11,6 +10,13 @@ pub struct Vector3D {
 }
 
 impl Vector3D {
+    /// 0 ベクトル
+    pub const ZERO: Vector3D = Vector3D {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+    };
+
     /// 新しい Vector3D を作成する
     ///
     /// # Argumets

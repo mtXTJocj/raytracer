@@ -1,5 +1,4 @@
-use super::approx_eq;
-use super::vector3d::Vector3D;
+use super::{approx_eq, vector3d::Vector3D};
 
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
@@ -12,6 +11,13 @@ pub struct Point3D {
 }
 
 impl Point3D {
+    /// 0
+    pub const ZERO: Point3D = Point3D {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+    };
+
     /// 新しい Point3D を作成する
     ///
     /// # Argumets
