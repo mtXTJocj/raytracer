@@ -97,4 +97,19 @@ mod tests {
         assert!(approx_eq(xs[0].t, -6.0));
         assert!(approx_eq(xs[1].t, -4.0));
     }
+
+    #[test]
+    fn intersect_sets_the_object_on_the_intersecion() {
+        let r = Ray::new(
+            Point3D::new(0.0, 0.0, -5.0),
+            Vector3D::new(0.0, 0.0, 1.0),
+        );
+        let s = Sphere::new();
+
+        let xs = s.intersect(&r);
+
+        assert_eq!(2, xs.len());
+        assert!(std::ptr::eq(xs[0].object, &s));
+        assert!(std::ptr::eq(xs[1].object, &s));
+    }
 }
