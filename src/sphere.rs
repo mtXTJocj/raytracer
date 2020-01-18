@@ -1,4 +1,4 @@
-use super::{point3d::Point3D, ray::Ray};
+use super::{intersection::Intersection, point3d::Point3D, ray::Ray};
 
 pub struct Sphere {}
 
@@ -7,7 +7,7 @@ impl Sphere {
         Sphere {}
     }
 
-    pub fn intersect(&self, ray: &Ray) -> Vec<f32> {
+    pub fn intersect(&self, ray: &Ray) -> Vec<Intersection> {
         let o = ray.origin();
         let d = ray.direction();
         let sphere_to_ray = o - &Point3D::ZERO;
@@ -25,7 +25,16 @@ impl Sphere {
         let t1 = (-b - discriminant.sqrt()) / (2.0 * a);
         let t2 = (-b + discriminant.sqrt()) / (2.0 * a);
 
-        return vec![t1, t2];
+        return vec![
+            Intersection {
+                t: t1,
+                object: self,
+            },
+            Intersection {
+                t: t2,
+                object: self,
+            },
+        ];
     }
 }
 
@@ -44,8 +53,8 @@ mod tests {
         let xs = s.intersect(&r);
         assert_eq!(2, xs.len());
 
-        assert!(approx_eq(xs[0], 4.0));
-        assert!(approx_eq(xs[1], 6.0));
+        assert!(approx_eq(xs[0].t, 4.0));
+        assert!(approx_eq(xs[1].t, 6.0));
     }
 
     #[test]
@@ -59,8 +68,8 @@ mod tests {
         let xs = s.intersect(&r);
         assert_eq!(2, xs.len());
 
-        assert!(approx_eq(xs[0], 5.0));
-        assert!(approx_eq(xs[1], 5.0));
+        assert!(approx_eq(xs[0].t, 5.0));
+        assert!(approx_eq(xs[1].t, 5.0));
     }
 
     #[test]
@@ -72,8 +81,8 @@ mod tests {
         let xs = s.intersect(&r);
         assert_eq!(2, xs.len());
 
-        assert!(approx_eq(xs[0], -1.0));
-        assert!(approx_eq(xs[1], 1.0));
+        assert!(approx_eq(xs[0].t, -1.0));
+        assert!(approx_eq(xs[1].t, 1.0));
     }
 
     #[test]
@@ -85,7 +94,7 @@ mod tests {
         let xs = s.intersect(&r);
         assert_eq!(2, xs.len());
 
-        assert!(approx_eq(xs[0], -6.0));
-        assert!(approx_eq(xs[1], -4.0));
+        assert!(approx_eq(xs[0].t, -6.0));
+        assert!(approx_eq(xs[1].t, -4.0));
     }
 }
