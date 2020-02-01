@@ -1,5 +1,7 @@
-use super::{matrix4x4::Matrix4x4, point3d::Point3D, vector3d::Vector3D};
-use std::ops::Mul;
+use super::{
+    matrix4x4::Matrix4x4, point3d::Point3D, ray::Ray, vector3d::Vector3D,
+};
+use std::{cmp::PartialEq, ops::Mul};
 
 /// 座標変換を表す。
 #[derive(Debug)]
@@ -196,6 +198,18 @@ impl Mul<&Vector3D> for &Transform {
     /// * `x` 適用対象となる Vector3D
     fn mul(self, x: &Vector3D) -> Self::Output {
         &self.mat * x
+    }
+}
+
+impl Mul<&Ray> for &Transform {
+    type Output = Ray;
+
+    /// Ray に対して変換を適用する
+    ///
+    /// # Arguments
+    /// * `r` 適用対象となる Ray
+    fn mul(self, r: &Ray) -> Self::Output {
+        &self.mat * r
     }
 }
 
@@ -409,5 +423,29 @@ mod tests {
         let t = &c * &(&b * &a);
 
         assert_eq!(Point3D::new(1.0, 0.0, 1.0), t.inv() * &p);
+    }
+
+    #[test]
+    fn translating_a_ray() {
+        let r =
+            Ray::new(Point3D::new(1.0, 2.0, 3.0), Vector3D::new(0.0, 1.0, 0.0));
+        let m = Transform::translation(3.0, 4.0, 5.0);
+
+        let r2 = &m * &r;
+
+        assert_eq!(Point3D::new(4.0, 6.0, 8.0), *r2.origin());
+        assert_eq!(Vector3D::new(0.0, 1.0, 0.0), *r2.direction());
+    }
+
+    #[test]
+    fn scaling_a_ray() {
+        let r =
+            Ray::new(Point3D::new(1.0, 2.0, 3.0), Vector3D::new(0.0, 1.0, 0.0));
+        let m = Transform::scaling(2.0, 3.0, 4.0);
+
+        let r2 = &m * &r;
+
+        assert_eq!(Point3D::new(2.0, 6.0, 12.0), *r2.origin());
+        assert_eq!(Vector3D::new(0.0, 3.0, 0.0), *r2.direction());
     }
 }

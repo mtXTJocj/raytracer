@@ -1,6 +1,6 @@
 use std::{cmp::PartialEq, ops::Mul};
 
-use super::{approx_eq, point3d::Point3D, vector3d::Vector3D};
+use super::{approx_eq, point3d::Point3D, ray::Ray, vector3d::Vector3D};
 
 /// 4x4 行列を表す。
 #[derive(Debug)]
@@ -168,6 +168,17 @@ impl Mul<&Vector3D> for &Matrix4x4 {
         let z = self.at(2, 0) * p.x + self.at(2, 1) * p.y + self.at(2, 2) * p.z;
 
         Vector3D::new(x, y, z)
+    }
+}
+
+impl Mul<&Ray> for &Matrix4x4 {
+    type Output = Ray;
+
+    fn mul(self, r: &Ray) -> Self::Output {
+        let o = self * r.origin();
+        let d = self * r.direction();
+
+        Ray::new(o, d)
     }
 }
 
