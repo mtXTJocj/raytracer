@@ -21,6 +21,11 @@ impl Color {
         green: 1.0,
         blue: 1.0,
     };
+    pub const RED: Color = Color {
+        red: 1.0,
+        green: 0.0,
+        blue: 0.0,
+    };
 
     /// 新しい Color を作成する
     ///
