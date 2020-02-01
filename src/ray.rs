@@ -1,5 +1,6 @@
 use super::{point3d::Point3D, vector3d::Vector3D};
 
+#[derive(Debug)]
 pub struct Ray {
     origin: Point3D,
     direction: Vector3D,
