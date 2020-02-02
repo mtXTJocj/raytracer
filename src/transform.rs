@@ -11,6 +11,13 @@ pub struct Transform {
 }
 
 impl Transform {
+    pub fn identity() -> Self {
+        Transform {
+            mat: Matrix4x4::identity(),
+            inv: Matrix4x4::identity(),
+        }
+    }
+
     /// 平行移動の変換を作成する
     ///
     /// # Argumets
