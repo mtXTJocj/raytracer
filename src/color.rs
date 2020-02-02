@@ -11,15 +11,23 @@ pub struct Color {
 }
 
 impl Color {
+    /// 黒
     pub const BLACK: Color = Color {
         red: 0.0,
         green: 0.0,
         blue: 0.0,
     };
+    /// 白
     pub const WHITE: Color = Color {
         red: 1.0,
         green: 1.0,
         blue: 1.0,
+    };
+    /// 赤
+    pub const RED: Color = Color {
+        red: 1.0,
+        green: 0.0,
+        blue: 0.0,
     };
 
     /// 新しい Color を作成する

@@ -1,5 +1,4 @@
-use super::approx_eq;
-use super::point3d::Point3D;
+use super::{approx_eq, point3d::Point3D};
 use std::ops::{Add, Div, DivAssign, Mul, Neg, Sub};
 
 /// 3 次元空間内のベクトル (x, y, z) を示す。
@@ -11,6 +10,13 @@ pub struct Vector3D {
 }
 
 impl Vector3D {
+    /// 0 ベクトル
+    pub const ZERO: Vector3D = Vector3D {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+    };
+
     /// 新しい Vector3D を作成する
     ///
     /// # Argumets
@@ -130,6 +136,19 @@ impl Mul<f32> for &Vector3D {
     }
 }
 
+impl Mul<&Vector3D> for f32 {
+    type Output = Vector3D;
+
+    /// v を self 倍する
+    ///
+    /// # Argumets
+    ///
+    /// * `v` - self をかける Vector3D
+    fn mul(self, v: &Vector3D) -> Self::Output {
+        v * self
+    }
+}
+
 impl Div<f32> for &Vector3D {
     type Output = Vector3D;
 
@@ -211,14 +230,18 @@ mod tests {
     fn multiplying_a_vector_by_a_scalar() {
         let v = Vector3D::new(1.0, -2.0, 3.0);
 
-        assert_eq!(Vector3D::new(3.5, -7.0, 10.5), &v * 3.5);
+        let ans = Vector3D::new(3.5, -7.0, 10.5);
+        assert_eq!(ans, &v * 3.5);
+        assert_eq!(ans, 3.5 * &v);
     }
 
     #[test]
     fn multiplying_a_vector_by_a_fraction() {
         let v = Vector3D::new(1.0, -2.0, 3.0);
 
-        assert_eq!(Vector3D::new(0.5, -1.0, 1.5), &v * 0.5);
+        let ans = Vector3D::new(0.5, -1.0, 1.5);
+        assert_eq!(ans, &v * 0.5);
+        assert_eq!(ans, 0.5 * &v);
     }
 
     #[test]
