@@ -128,4 +128,23 @@ mod tests {
         assert!(std::ptr::eq(xs[0].object, &s));
         assert!(std::ptr::eq(xs[1].object, &s));
     }
+
+    #[test]
+    fn a_spheres_default_transformation() {
+        let s = Sphere::new();
+
+        assert_eq!(Transform::identity(), *s.transform());
+    }
+
+    #[test]
+    fn changing_a_spheres_transformation() {
+        let mut s = Sphere::new();
+        let x = 2.0;
+        let y = 3.0;
+        let z = 4.0;
+        let t = Transform::translation(x, y, z);
+        *s.transform_mut() = t;
+
+        assert_eq!(Transform::translation(x, y, z), *s.transform());
+    }
 }
