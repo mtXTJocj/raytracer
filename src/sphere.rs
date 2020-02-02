@@ -1,11 +1,26 @@
-use super::{intersection::Intersection, point3d::Point3D, ray::Ray};
+use super::{
+    intersection::Intersection, point3d::Point3D, ray::Ray,
+    transform::Transform,
+};
 
 #[derive(Debug)]
-pub struct Sphere {}
+pub struct Sphere {
+    transform: Transform,
+}
 
 impl Sphere {
     pub fn new() -> Self {
-        Sphere {}
+        Sphere {
+            transform: Transform::identity(),
+        }
+    }
+
+    pub fn transform(&self) -> &Transform {
+        &self.transform
+    }
+
+    pub fn transform_mut(&mut self) -> &mut Transform {
+        &mut self.transform
     }
 
     pub fn intersect(&self, ray: &Ray) -> Vec<Intersection> {
