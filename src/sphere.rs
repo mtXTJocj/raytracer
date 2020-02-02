@@ -24,8 +24,9 @@ impl Sphere {
     }
 
     pub fn intersect(&self, ray: &Ray) -> Vec<Intersection> {
-        let o = ray.origin();
-        let d = ray.direction();
+        let r = self.transform.inv() * ray;
+        let o = r.origin();
+        let d = r.direction();
         let sphere_to_ray = o - &Point3D::ZERO;
 
         let a = d.dot(&d);
@@ -146,5 +147,35 @@ mod tests {
         *s.transform_mut() = t;
 
         assert_eq!(Transform::translation(x, y, z), *s.transform());
+    }
+
+    #[test]
+    fn intersecting_a_scaled_sphere_with_a_ray() {
+        let r = Ray::new(
+            Point3D::new(0.0, 0.0, -5.0),
+            Vector3D::new(0.0, 0.0, 1.0),
+        );
+        let mut s = Sphere::new();
+        *s.transform_mut() = Transform::scaling(2.0, 2.0, 2.0);
+
+        let xs = s.intersect(&r);
+
+        assert_eq!(2, xs.len());
+        assert_eq!(3.0, xs[0].t);
+        assert_eq!(7.0, xs[1].t);
+    }
+
+    #[test]
+    fn intersecting_a_translated_sphere_with_a_ray() {
+        let r = Ray::new(
+            Point3D::new(0.0, 0.0, -5.0),
+            Vector3D::new(0.0, 0.0, 1.0),
+        );
+        let mut s = Sphere::new();
+        *s.transform_mut() = Transform::translation(5.0, 0.0, 0.0);
+
+        let xs = s.intersect(&r);
+
+        assert_eq!(0, xs.len());
     }
 }
