@@ -184,6 +184,12 @@ impl Transform {
     }
 }
 
+impl PartialEq<Transform> for Transform {
+    fn eq(&self, other: &Transform) -> bool {
+        self.mat == other.mat
+    }
+}
+
 impl Mul<&Point3D> for &Transform {
     type Output = Point3D;
 
