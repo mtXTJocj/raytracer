@@ -3,26 +3,38 @@ use super::{
     transform::Transform,
 };
 
+/// 原点を中心とする半径 1 の単位球
 #[derive(Debug)]
 pub struct Sphere {
+    /// 球に対して適用する変換
     transform: Transform,
 }
 
 impl Sphere {
+    /// 新規に Sphere を作成する
     pub fn new() -> Self {
         Sphere {
             transform: Transform::identity(),
         }
     }
 
+    /// self に対する変換を取得する
     pub fn transform(&self) -> &Transform {
         &self.transform
     }
 
+    /// self に対する変換を取得する
     pub fn transform_mut(&mut self) -> &mut Transform {
         &mut self.transform
     }
 
+    /// ray と self の交点を求める。全ての交点を Vec に入れて返す。
+    /// 交点がない場合には空の Vec を返す。
+    ///
+    /// # Argumets
+    /// * `ray` - 交点の計算対象となる Ray
+    ///
+    /// # Returns
     pub fn intersect(&self, ray: &Ray) -> Vec<Intersection> {
         let r = self.transform.inv() * ray;
         let o = r.origin();

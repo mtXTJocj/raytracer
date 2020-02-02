@@ -1,11 +1,19 @@
 use super::sphere::Sphere;
 
+/// Ray とオブジェクトとの交点
 #[derive(Debug)]
 pub struct Intersection<'a> {
+    /// 交差する Ray の始点からの距離
     pub t: f32,
+    /// Ray と交差したオブジェクト
     pub object: &'a Sphere,
 }
 
+/// 複数の交点のうち、Ray の始点よりも先で最も手前にあるものを返す。
+/// 存在しない場合は None を返す。
+///
+/// # Argumets
+/// * `xs` - 候補となる Intersection の Vec
 pub fn hit<'a, 'b>(
     xs: &'a Vec<Intersection<'b>>,
 ) -> Option<&'a Intersection<'b>> {

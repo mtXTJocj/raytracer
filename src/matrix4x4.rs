@@ -122,6 +122,11 @@ impl PartialEq for Matrix4x4 {
 impl Mul<&Matrix4x4> for &Matrix4x4 {
     type Output = Matrix4x4;
 
+    /// Matrix4x4 同士の積
+    ///
+    /// # Argumets
+    ///
+    /// * `other` - 乗算対象となる Matrix4x4
     fn mul(self, mat: &Matrix4x4) -> Self::Output {
         let mut m = [0.0; 16];
 
@@ -141,6 +146,11 @@ impl Mul<&Matrix4x4> for &Matrix4x4 {
 impl Mul<&Point3D> for &Matrix4x4 {
     type Output = Point3D;
 
+    /// self * p を計算する
+    ///
+    /// # Argumets
+    ///
+    /// * `p` - 対象となる Point3D
     fn mul(self, p: &Point3D) -> Self::Output {
         let x = self.at(0, 0) * p.x
             + self.at(0, 1) * p.y
@@ -162,6 +172,11 @@ impl Mul<&Point3D> for &Matrix4x4 {
 impl Mul<&Vector3D> for &Matrix4x4 {
     type Output = Vector3D;
 
+    /// self * p を計算する
+    ///
+    /// # Argumets
+    ///
+    /// * `p` - 対象となる Point3D
     fn mul(self, p: &Vector3D) -> Self::Output {
         let x = self.at(0, 0) * p.x + self.at(0, 1) * p.y + self.at(0, 2) * p.z;
         let y = self.at(1, 0) * p.x + self.at(1, 1) * p.y + self.at(1, 2) * p.z;
@@ -174,6 +189,11 @@ impl Mul<&Vector3D> for &Matrix4x4 {
 impl Mul<&Ray> for &Matrix4x4 {
     type Output = Ray;
 
+    /// Ray に対して変換行列を適用する。
+    ///
+    /// # Argumets
+    ///
+    /// * `r` - 対象となる Ray
     fn mul(self, r: &Ray) -> Self::Output {
         let o = self * r.origin();
         let d = self * r.direction();

@@ -11,6 +11,7 @@ pub struct Transform {
 }
 
 impl Transform {
+    /// 恒等変換を作成する
     pub fn identity() -> Self {
         Transform {
             mat: Matrix4x4::identity(),
