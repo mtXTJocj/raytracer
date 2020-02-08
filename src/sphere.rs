@@ -71,7 +71,10 @@ impl Sphere {
     /// # Argumets
     /// * `p` - self 上の点
     pub fn normal_at(&self, p: &Point3D) -> Vector3D {
-        Vector3D::new(p.x, p.y, p.z)
+        let p_in_local = self.transform.inv() * p;
+        let n = Vector3D::new(p_in_local.x, p_in_local.y, p_in_local.z);
+
+        self.transform.apply_to_normal(&n)
     }
 }
 
@@ -259,5 +262,28 @@ mod tests {
             )),
             *n.normalize()
         );
+    }
+
+    #[test]
+    fn computing_the_normal_on_a_translated_sphere() {
+        let mut s = Sphere::new();
+        *s.transform_mut() = Transform::translation(0.0, 1.0, 0.0);
+
+        let n = s.normal_at(&Point3D::new(0.0, 1.70711, -0.70711));
+        assert_eq!(Vector3D::new(0.0, 0.70711, -0.70711), n);
+    }
+
+    #[test]
+    fn computing_the_normal_on_a_transformed_sphere() {
+        let mut s = Sphere::new();
+        *s.transform_mut() = &Transform::scaling(1.0, 0.5, 1.0)
+            * &Transform::rotation_z(std::f32::consts::PI / 5.0);
+
+        let n = s.normal_at(&Point3D::new(
+            0.0,
+            2f32.sqrt() / 2.0,
+            -2f32.sqrt() / 2.0,
+        ));
+        assert_eq!(Vector3D::new(0.0, 0.97014, -0.24254), n);
     }
 }
