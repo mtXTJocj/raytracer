@@ -1,6 +1,6 @@
 use super::{
     intersection::Intersection, point3d::Point3D, ray::Ray,
-    transform::Transform,
+    transform::Transform, vector3d::Vector3D,
 };
 
 /// 原点を中心とする半径 1 の単位球
@@ -64,6 +64,14 @@ impl Sphere {
                 object: self,
             },
         ];
+    }
+
+    /// self 上の点 p における法線ベクトルを取得する。
+    ///
+    /// # Argumets
+    /// * `p` - self 上の点
+    pub fn normal_at(&self, p: &Point3D) -> Vector3D {
+        Vector3D::new(p.x, p.y, p.z)
     }
 }
 
@@ -189,5 +197,67 @@ mod tests {
         let xs = s.intersect(&r);
 
         assert_eq!(0, xs.len());
+    }
+
+    #[test]
+    fn the_normal_on_a_sphere_at_a_point_on_the_x_axis() {
+        let s = Sphere::new();
+        let n = s.normal_at(&Point3D::new(1.0, 0.0, 0.0));
+
+        assert_eq!(Vector3D::new(1.0, 0.0, 0.0), n);
+    }
+
+    #[test]
+    fn the_normal_on_a_sphere_at_a_point_on_the_y_axis() {
+        let s = Sphere::new();
+        let n = s.normal_at(&Point3D::new(0.0, 1.0, 0.0));
+
+        assert_eq!(Vector3D::new(0.0, 1.0, 0.0), n);
+    }
+
+    #[test]
+    fn the_normal_on_a_sphere_at_a_point_on_the_z_axis() {
+        let s = Sphere::new();
+        let n = s.normal_at(&Point3D::new(0.0, 0.0, 1.0));
+
+        assert_eq!(Vector3D::new(0.0, 0.0, 1.0), n);
+    }
+
+    #[test]
+    fn the_normal_on_a_sphere_at_a_nonaxial_point() {
+        let s = Sphere::new();
+        let n = s.normal_at(&Point3D::new(
+            3f32.sqrt() / 3.0,
+            3f32.sqrt() / 3.0,
+            3f32.sqrt() / 3.0,
+        ));
+
+        assert_eq!(
+            Vector3D::new(
+                3f32.sqrt() / 3.0,
+                3f32.sqrt() / 3.0,
+                3f32.sqrt() / 3.0,
+            ),
+            n
+        );
+    }
+
+    #[test]
+    fn the_normal_is_a_normalized_vector() {
+        let s = Sphere::new();
+        let mut n = s.normal_at(&Point3D::new(
+            3f32.sqrt() / 3.0,
+            3f32.sqrt() / 3.0,
+            3f32.sqrt() / 3.0,
+        ));
+
+        assert_eq!(
+            s.normal_at(&Point3D::new(
+                3f32.sqrt() / 3.0,
+                3f32.sqrt() / 3.0,
+                3f32.sqrt() / 3.0
+            )),
+            *n.normalize()
+        );
     }
 }
