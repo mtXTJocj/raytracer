@@ -59,6 +59,10 @@ impl Vector3D {
             self.x * v.y - self.y * v.x,
         )
     }
+
+    pub fn reflect(&self, n: &Vector3D) -> Vector3D {
+        self - &(2.0 * self.dot(n) * n)
+    }
 }
 
 impl PartialEq for Vector3D {
@@ -295,5 +299,23 @@ mod tests {
 
         assert_eq!(Vector3D::new(-1.0, 2.0, -1.0), a.cross(&b));
         assert_eq!(Vector3D::new(1.0, -2.0, 1.0), b.cross(&a));
+    }
+
+    #[test]
+    fn reflecting_a_vector_approaching_at_45deg() {
+        let v = Vector3D::new(1.0, -1.0, 0.0);
+        let n = Vector3D::new(0.0, 1.0, 0.0);
+        let r = v.reflect(&n);
+
+        assert_eq!(Vector3D::new(1.0, 1.0, 0.0), r);
+    }
+
+    #[test]
+    fn reflecting_a_vector_off_a_slanted_surface() {
+        let v = Vector3D::new(0.0, -1.0, 0.0);
+        let n = Vector3D::new(2f32.sqrt() / 2.0, 2f32.sqrt() / 2.0, 0.0);
+        let r = v.reflect(&n);
+
+        assert_eq!(Vector3D::new(1.0, 0.0, 0.0), r);
     }
 }
