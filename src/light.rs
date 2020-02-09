@@ -2,24 +2,24 @@ use super::{color::Color, point3d::Point3D};
 
 #[derive(Debug)]
 pub struct Light {
-    intensity: Color,
     position: Point3D,
+    intensity: Color,
 }
 
 impl Light {
-    pub fn new(intensity: Color, position: Point3D) -> Self {
+    pub fn new(position: Point3D, intensity: Color) -> Self {
         Light {
-            intensity,
             position,
+            intensity,
         }
-    }
-
-    pub fn intensity(&self) -> &Color {
-        &self.intensity
     }
 
     pub fn position(&self) -> &Point3D {
         &self.position
+    }
+
+    pub fn intensity(&self) -> &Color {
+        &self.intensity
     }
 }
 
@@ -32,9 +32,9 @@ mod tests {
         let intensity = Color::new(1.0, 1.0, 1.0);
         let position = Point3D::new(0.0, 0.0, 0.0);
 
-        let light = Light::new(intensity.clone(), position.clone());
+        let light = Light::new(position.clone(), intensity.clone());
 
-        assert_eq!(intensity, *light.intensity());
         assert_eq!(position, *light.position());
+        assert_eq!(intensity, *light.intensity());
     }
 }
