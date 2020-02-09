@@ -1,6 +1,7 @@
 pub mod canvas;
 pub mod color;
 pub mod intersection;
+pub mod light;
 pub mod matrix4x4;
 pub mod point3d;
 pub mod ray;
