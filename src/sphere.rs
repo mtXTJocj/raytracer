@@ -1,5 +1,5 @@
 use super::{
-    intersection::Intersection, point3d::Point3D, ray::Ray,
+    intersection::Intersection, material::Material, point3d::Point3D, ray::Ray,
     transform::Transform, vector3d::Vector3D,
 };
 
@@ -8,6 +8,7 @@ use super::{
 pub struct Sphere {
     /// 球に対して適用する変換
     transform: Transform,
+    material: Material,
 }
 
 impl Sphere {
@@ -15,6 +16,7 @@ impl Sphere {
     pub fn new() -> Self {
         Sphere {
             transform: Transform::identity(),
+            material: Material::new(),
         }
     }
 
@@ -26,6 +28,14 @@ impl Sphere {
     /// self に対する変換を取得する
     pub fn transform_mut(&mut self) -> &mut Transform {
         &mut self.transform
+    }
+
+    pub fn material(&self) -> &Material {
+        &self.material
+    }
+
+    pub fn material_mut(&mut self) -> &mut Material {
+        &mut self.material
     }
 
     /// ray と self の交点を求める。全ての交点を Vec に入れて返す。
@@ -285,5 +295,27 @@ mod tests {
             -2f32.sqrt() / 2.0,
         ));
         assert_eq!(Vector3D::new(0.0, 0.97014, -0.24254), n);
+    }
+
+    #[test]
+    fn a_sphere_has_a_default_material() {
+        let s = Sphere::new();
+        let m = Material::new();
+
+        assert_eq!(m.color, s.material().color);
+        assert_eq!(m.ambient, s.material().ambient);
+        assert_eq!(m.diffuse, s.material().diffuse);
+        assert_eq!(m.specular, s.material().specular);
+        assert_eq!(m.shininess, s.material().shininess);
+    }
+
+    #[test]
+    fn a_shpere_may_be_assigned_a_material() {
+        let mut s = Sphere::new();
+        let mut m = Material::new();
+        m.ambient = 1.0;
+
+        *s.material_mut() = m;
+        assert_eq!(1.0, s.material().ambient);
     }
 }
