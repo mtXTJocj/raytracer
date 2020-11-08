@@ -89,6 +89,27 @@ impl Sub<&Color> for &Color {
     }
 }
 
+impl Mul<f32> for &Color {
+    type Output = Color;
+
+    /// Color の各要素を other 倍する
+    ///
+    /// Argumets
+    ///
+    /// * `other` - 乗算する f32
+    fn mul(self, other: f32) -> Self::Output {
+        Color::new(self.red * other, self.green * other, self.blue * other)
+    }
+}
+
+impl Mul<&Color> for f32 {
+    type Output = Color;
+
+    fn mul(self, other: &Color) -> Self::Output {
+        Color::new(self * other.red, self * other.green, self * other.blue)
+    }
+}
+
 impl Mul<&Color> for &Color {
     type Output = Color;
 
