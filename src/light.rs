@@ -1,12 +1,21 @@
 use super::{color::Color, point3d::Point3D};
 
+/// 点光源
 #[derive(Debug)]
 pub struct Light {
+    /// 光源位置
     position: Point3D,
+    /// 色
     intensity: Color,
 }
 
 impl Light {
+    /// 点光源を作成する
+    ///
+    /// # Argumets
+    ///
+    /// * `position` - 光源位置
+    /// * `intensity` - 色
     pub fn new(position: Point3D, intensity: Color) -> Self {
         Light {
             position,
@@ -14,10 +23,12 @@ impl Light {
         }
     }
 
+    /// 光源位置を取得する
     pub fn position(&self) -> &Point3D {
         &self.position
     }
 
+    /// 色を取得する
     pub fn intensity(&self) -> &Color {
         &self.intensity
     }

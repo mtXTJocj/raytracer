@@ -1,15 +1,22 @@
 use super::{color::Color, light::Light, point3d::Point3D, vector3d::Vector3D};
 
+/// マテリアル
 #[derive(Debug)]
 pub struct Material {
+    /// 色
     pub color: Color,
+    /// 環境光の強さ
     pub ambient: f32,
+    /// 拡散反射光の強さ
     pub diffuse: f32,
+    /// 鏡面反射光の強さ
     pub specular: f32,
+    /// 鏡面反射光の広がり。大きい程、狭く強い。
     pub shininess: f32,
 }
 
 impl Material {
+    /// Material を作成する
     pub fn new() -> Self {
         Material {
             color: Color::WHITE,
@@ -20,6 +27,14 @@ impl Material {
         }
     }
 
+    /// ライティングの計算を行う。
+    ///
+    /// # Argumets
+    ///
+    /// * `light` - 光源
+    /// * `point` - 計算を行うオブジェクト上の点
+    /// * `eyev` - 視線ベクトル
+    /// * `normalv` - point における法線ベクトル
     pub fn lighting(
         &self,
         light: &Light,

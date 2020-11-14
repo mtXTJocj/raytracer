@@ -60,6 +60,11 @@ impl Vector3D {
         )
     }
 
+    /// 法線ベクトル n に対する self の反射ベクトルを計算する
+    ///
+    /// # Argumets
+    ///
+    /// * `n` - 法線ベクトル
     pub fn reflect(&self, n: &Vector3D) -> Vector3D {
         self - &(2.0 * self.dot(n) * n)
     }
