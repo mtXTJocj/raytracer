@@ -1,6 +1,6 @@
 use raytracer::{
-    canvas::Canvas, color::Color, intersection::hit, point3d::Point3D,
-    ray::Ray, sphere::Sphere,
+    canvas::Canvas, color::Color, intersection::hit, light::Light,
+    material::Material, point3d::Point3D, ray::Ray, sphere::Sphere,
 };
 
 use std::{
@@ -25,8 +25,14 @@ fn main() {
     let half = wall_size / 2.0;
 
     let mut canvas = Canvas::new(canvas_pixels, canvas_pixels);
-    let color = Color::RED;
-    let shape = Sphere::new();
+    let mut shape = Sphere::new();
+    let mut material = Material::new();
+    material.color = Color::new(1.0, 0.2, 1.0);
+    *shape.material_mut() = material;
+
+    let light_position = Point3D::new(-10.0, 10.0, -10.0);
+    let light_color = Color::WHITE;
+    let light = Light::new(light_position, light_color);
 
     for y in 0..canvas.height() {
         let world_y = half - (size_per_pixel * y as f32);
@@ -40,7 +46,12 @@ fn main() {
             let r = Ray::new(ray_origin.clone(), direction);
             let xs = shape.intersect(&r);
 
-            if let Some(_) = hit(&xs) {
+            if let Some(h) = hit(&xs) {
+                let point = r.position(h.t);
+                let normal = h.object.normal_at(&point);
+                let eye = -r.direction();
+                let color =
+                    h.object.material().lighting(&light, &point, &eye, &normal);
                 *canvas.color_at_mut(x, y) = color;
             }
         }
