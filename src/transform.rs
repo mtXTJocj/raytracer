@@ -183,6 +183,18 @@ impl Transform {
     pub fn inv(&self) -> &Matrix4x4 {
         &self.inv
     }
+
+    pub fn apply_to_normal(&self, n: &Vector3D) -> Vector3D {
+        let m = &self.inv;
+
+        let x = m.at(0, 0) * n.x + m.at(1, 0) * n.y + m.at(2, 0) * n.z;
+        let y = m.at(0, 1) * n.x + m.at(1, 1) * n.y + m.at(2, 1) * n.z;
+        let z = m.at(0, 2) * n.x + m.at(1, 2) * n.y + m.at(2, 2) * n.z;
+
+        let mut n = Vector3D::new(x, y, z);
+        n.normalize();
+        n
+    }
 }
 
 impl PartialEq<Transform> for Transform {

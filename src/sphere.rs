@@ -1,6 +1,6 @@
 use super::{
-    intersection::Intersection, point3d::Point3D, ray::Ray,
-    transform::Transform,
+    intersection::Intersection, material::Material, point3d::Point3D, ray::Ray,
+    transform::Transform, vector3d::Vector3D,
 };
 
 /// 原点を中心とする半径 1 の単位球
@@ -8,6 +8,7 @@ use super::{
 pub struct Sphere {
     /// 球に対して適用する変換
     transform: Transform,
+    material: Material,
 }
 
 impl Sphere {
@@ -15,6 +16,7 @@ impl Sphere {
     pub fn new() -> Self {
         Sphere {
             transform: Transform::identity(),
+            material: Material::new(),
         }
     }
 
@@ -26,6 +28,14 @@ impl Sphere {
     /// self に対する変換を取得する
     pub fn transform_mut(&mut self) -> &mut Transform {
         &mut self.transform
+    }
+
+    pub fn material(&self) -> &Material {
+        &self.material
+    }
+
+    pub fn material_mut(&mut self) -> &mut Material {
+        &mut self.material
     }
 
     /// ray と self の交点を求める。全ての交点を Vec に入れて返す。
@@ -64,6 +74,17 @@ impl Sphere {
                 object: self,
             },
         ];
+    }
+
+    /// self 上の点 p における法線ベクトルを取得する。
+    ///
+    /// # Argumets
+    /// * `p` - self 上の点
+    pub fn normal_at(&self, p: &Point3D) -> Vector3D {
+        let p_in_local = self.transform.inv() * p;
+        let n = Vector3D::new(p_in_local.x, p_in_local.y, p_in_local.z);
+
+        self.transform.apply_to_normal(&n)
     }
 }
 
@@ -189,5 +210,112 @@ mod tests {
         let xs = s.intersect(&r);
 
         assert_eq!(0, xs.len());
+    }
+
+    #[test]
+    fn the_normal_on_a_sphere_at_a_point_on_the_x_axis() {
+        let s = Sphere::new();
+        let n = s.normal_at(&Point3D::new(1.0, 0.0, 0.0));
+
+        assert_eq!(Vector3D::new(1.0, 0.0, 0.0), n);
+    }
+
+    #[test]
+    fn the_normal_on_a_sphere_at_a_point_on_the_y_axis() {
+        let s = Sphere::new();
+        let n = s.normal_at(&Point3D::new(0.0, 1.0, 0.0));
+
+        assert_eq!(Vector3D::new(0.0, 1.0, 0.0), n);
+    }
+
+    #[test]
+    fn the_normal_on_a_sphere_at_a_point_on_the_z_axis() {
+        let s = Sphere::new();
+        let n = s.normal_at(&Point3D::new(0.0, 0.0, 1.0));
+
+        assert_eq!(Vector3D::new(0.0, 0.0, 1.0), n);
+    }
+
+    #[test]
+    fn the_normal_on_a_sphere_at_a_nonaxial_point() {
+        let s = Sphere::new();
+        let n = s.normal_at(&Point3D::new(
+            3f32.sqrt() / 3.0,
+            3f32.sqrt() / 3.0,
+            3f32.sqrt() / 3.0,
+        ));
+
+        assert_eq!(
+            Vector3D::new(
+                3f32.sqrt() / 3.0,
+                3f32.sqrt() / 3.0,
+                3f32.sqrt() / 3.0,
+            ),
+            n
+        );
+    }
+
+    #[test]
+    fn the_normal_is_a_normalized_vector() {
+        let s = Sphere::new();
+        let mut n = s.normal_at(&Point3D::new(
+            3f32.sqrt() / 3.0,
+            3f32.sqrt() / 3.0,
+            3f32.sqrt() / 3.0,
+        ));
+
+        assert_eq!(
+            s.normal_at(&Point3D::new(
+                3f32.sqrt() / 3.0,
+                3f32.sqrt() / 3.0,
+                3f32.sqrt() / 3.0
+            )),
+            *n.normalize()
+        );
+    }
+
+    #[test]
+    fn computing_the_normal_on_a_translated_sphere() {
+        let mut s = Sphere::new();
+        *s.transform_mut() = Transform::translation(0.0, 1.0, 0.0);
+
+        let n = s.normal_at(&Point3D::new(0.0, 1.70711, -0.70711));
+        assert_eq!(Vector3D::new(0.0, 0.70711, -0.70711), n);
+    }
+
+    #[test]
+    fn computing_the_normal_on_a_transformed_sphere() {
+        let mut s = Sphere::new();
+        *s.transform_mut() = &Transform::scaling(1.0, 0.5, 1.0)
+            * &Transform::rotation_z(std::f32::consts::PI / 5.0);
+
+        let n = s.normal_at(&Point3D::new(
+            0.0,
+            2f32.sqrt() / 2.0,
+            -2f32.sqrt() / 2.0,
+        ));
+        assert_eq!(Vector3D::new(0.0, 0.97014, -0.24254), n);
+    }
+
+    #[test]
+    fn a_sphere_has_a_default_material() {
+        let s = Sphere::new();
+        let m = Material::new();
+
+        assert_eq!(m.color, s.material().color);
+        assert_eq!(m.ambient, s.material().ambient);
+        assert_eq!(m.diffuse, s.material().diffuse);
+        assert_eq!(m.specular, s.material().specular);
+        assert_eq!(m.shininess, s.material().shininess);
+    }
+
+    #[test]
+    fn a_shpere_may_be_assigned_a_material() {
+        let mut s = Sphere::new();
+        let mut m = Material::new();
+        m.ambient = 1.0;
+
+        *s.material_mut() = m;
+        assert_eq!(1.0, s.material().ambient);
     }
 }
