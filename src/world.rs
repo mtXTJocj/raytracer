@@ -103,11 +103,6 @@ mod tests {
     }
 
     #[test]
-    fn creating_world() {
-        let w = World::new();
-    }
-
-    #[test]
     fn intersect_a_world_with_a_ray() {
         let w = default_world();
         let r = Ray::new(
