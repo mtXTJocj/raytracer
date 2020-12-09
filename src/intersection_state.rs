@@ -4,7 +4,7 @@ use super::{
 };
 
 #[derive(Debug)]
-pub(crate) struct IntersectionState<'a> {
+pub struct IntersectionState<'a> {
     pub(crate) t: f32,
     pub(crate) object: &'a Sphere,
     pub(crate) point: Point3D,
@@ -19,8 +19,9 @@ impl<'a> IntersectionState<'a> {
         let object = i.object;
         let point = r.position(i.t);
         let eyev = -r.direction();
-        let normalv = object.normal_at(&point);
+        let mut normalv = object.normal_at(&point);
         let inside = if normalv.dot(&eyev) < 0.0 {
+            normalv = -&normalv;
             true
         } else {
             false
@@ -57,6 +58,39 @@ mod tests {
         assert_eq!(i.t, comps.t);
         assert_eq!(Point3D::new(0.0, 0.0, -1.0), comps.point);
         assert_eq!(Vector3D::new(0.0, 0.0, -1.0), comps.eyev);
+        assert_eq!(Vector3D::new(0.0, 0.0, -1.0), comps.normalv);
+    }
+
+    #[test]
+    fn the_hit_when_an_intersection_occurs_on_the_outside() {
+        let r = Ray::new(
+            Point3D::new(0.0, 0.0, -5.0),
+            Vector3D::new(0.0, 0.0, 1.0),
+        );
+        let shape = Sphere::new();
+        let i = Intersection {
+            t: 4.0,
+            object: &shape,
+        };
+
+        let comps = IntersectionState::new(&i, &r);
+        assert_eq!(false, comps.inside);
+    }
+
+    #[test]
+    fn the_hit_when_an_intersection_occurs_on_the_inside() {
+        let r =
+            Ray::new(Point3D::new(0.0, 0.0, 0.0), Vector3D::new(0.0, 0.0, 1.0));
+        let shape = Sphere::new();
+        let i = Intersection {
+            t: 1.0,
+            object: &shape,
+        };
+
+        let comps = IntersectionState::new(&i, &r);
+        assert_eq!(Point3D::new(0.0, 0.0, 1.0), comps.point);
+        assert_eq!(Vector3D::new(0.0, 0.0, -1.0), comps.eyev);
+        assert_eq!(true, comps.inside);
         assert_eq!(Vector3D::new(0.0, 0.0, -1.0), comps.normalv);
     }
 }
