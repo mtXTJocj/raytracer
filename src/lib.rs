@@ -9,6 +9,7 @@ pub mod ray;
 pub mod sphere;
 pub mod transform;
 pub mod vector3d;
+pub mod world;
 
 const EPSILON: f32 = 0.0001;
 
