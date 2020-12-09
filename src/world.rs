@@ -1,6 +1,7 @@
 use super::{
-    intersection::Intersection, light::Light, ray::Ray, sphere::Sphere,
-    vector3d::Vector3D,
+    color::Color, intersection::Intersection,
+    intersection_state::IntersectionState, light::Light, ray::Ray,
+    sphere::Sphere,
 };
 
 #[derive(Debug)]
@@ -42,6 +43,20 @@ impl World {
 
         intersections
     }
+
+    pub fn shade_hit(&self, intersection_state: &IntersectionState) -> Color {
+        let mut c = Color::new(0.0, 0.0, 0.0);
+        for light in &self.lights {
+            c = &c
+                + &intersection_state.object.material().lighting(
+                    light,
+                    &intersection_state.point,
+                    &intersection_state.eyev,
+                    &intersection_state.normalv,
+                )
+        }
+        c
+    }
 }
 
 #[cfg(test)]
@@ -49,7 +64,7 @@ mod tests {
     use super::{
         super::{
             approx_eq, color::Color, material::Material, point3d::Point3D,
-            transform::Transform,
+            transform::Transform, vector3d::Vector3D,
         },
         *,
     };
@@ -96,5 +111,63 @@ mod tests {
         assert!(approx_eq(4.5, xs[1].t));
         assert!(approx_eq(5.5, xs[2].t));
         assert!(approx_eq(6.0, xs[3].t));
+    }
+
+    #[test]
+    fn shading_an_intersection() {
+        let w = default_world();
+        let r = Ray::new(
+            Point3D::new(0.0, 0.0, -5.0),
+            Vector3D::new(0.0, 0.0, 1.0),
+        );
+        let shape = &w.shapes[0];
+        let i = Intersection {
+            t: 4.0,
+            object: shape,
+        };
+        let comps = IntersectionState::new(&i, &r);
+
+        let c = w.shade_hit(&comps);
+        assert_eq!(Color::new(0.38066, 0.47583, 0.2855), c);
+    }
+
+    #[test]
+    fn shading_an_intersection_from_the_inside() {
+        let mut w = default_world();
+        w.lights[0] = Light::new(Point3D::new(0.0, 0.25, 0.0), Color::WHITE);
+        let r =
+            Ray::new(Point3D::new(0.0, 0.0, 0.0), Vector3D::new(0.0, 0.0, 1.0));
+        let shape = &w.shapes[1];
+        let i = Intersection {
+            t: 0.5,
+            object: shape,
+        };
+        let comps = IntersectionState::new(&i, &r);
+        let c = w.shade_hit(&comps);
+        assert_eq!(Color::new(0.90498, 0.90498, 0.90498), c);
+    }
+
+    #[test]
+    fn shading_an_intersection_with_two_lights() {
+        let mut w = default_world();
+        let r = Ray::new(
+            Point3D::new(0.0, 0.0, -5.0),
+            Vector3D::new(0.0, 0.0, 1.0),
+        );
+        let l = Light::new(
+            Point3D::new(-10.0, 10.0, -10.0),
+            Color::new(1.0, 1.0, 1.0),
+        );
+        w.add_light(l);
+
+        let shape = &w.shapes[0];
+        let i = Intersection {
+            t: 4.0,
+            object: shape,
+        };
+        let comps = IntersectionState::new(&i, &r);
+
+        let c = w.shade_hit(&comps);
+        assert_eq!(Color::new(0.76132, 0.95166, 0.5710), c);
     }
 }
