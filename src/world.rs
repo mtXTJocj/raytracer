@@ -57,6 +57,16 @@ impl World {
         }
         c
     }
+
+    pub fn color_at(&self, r: &Ray) -> Color {
+        let xs = self.intersect(r);
+        if xs.len() > 0 {
+            let is = IntersectionState::new(&xs[0], r);
+            self.shade_hit(&is)
+        } else {
+            Color::BLACK
+        }
+    }
 }
 
 #[cfg(test)]
@@ -169,5 +179,40 @@ mod tests {
 
         let c = w.shade_hit(&comps);
         assert_eq!(Color::new(0.76132, 0.95166, 0.5710), c);
+    }
+
+    #[test]
+    fn the_color_when_a_ray_misses() {
+        let w = default_world();
+        let r = Ray::new(
+            Point3D::new(0.0, 0.0, -5.0),
+            Vector3D::new(0.0, 1.0, 0.0),
+        );
+        let c = w.color_at(&r);
+        assert_eq!(Color::BLACK, c);
+    }
+
+    #[test]
+    fn the_color_when_a_ray_hits() {
+        let w = default_world();
+        let r = Ray::new(
+            Point3D::new(0.0, 0.0, -5.0),
+            Vector3D::new(0.0, 0.0, 1.0),
+        );
+        let c = w.color_at(&r);
+        assert_eq!(Color::new(0.38066, 0.47583, 0.2855), c);
+    }
+
+    #[test]
+    fn the_color_with_an_intersection_behinde_a_ray() {
+        let mut w = default_world();
+        w.shapes[0].material_mut().ambient = 1.0;
+        w.shapes[1].material_mut().ambient = 1.0;
+        let r = Ray::new(
+            Point3D::new(0.0, 0.0, 0.75),
+            Vector3D::new(0.0, 0.0, -1.0),
+        );
+        let c = w.color_at(&r);
+        assert_eq!(w.shapes[0].material().color, c);
     }
 }
