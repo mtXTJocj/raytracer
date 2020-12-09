@@ -1,6 +1,7 @@
 pub mod canvas;
 pub mod color;
 pub mod intersection;
+pub mod intersection_state;
 pub mod light;
 pub mod material;
 pub mod matrix4x4;
