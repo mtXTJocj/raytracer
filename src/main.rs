@@ -1,6 +1,6 @@
 use raytracer::{
-    canvas::Canvas, color::Color, intersection::hit, light::Light,
-    material::Material, point3d::Point3D, ray::Ray, sphere::Sphere,
+    camera::Camera, color::Color, light::Light, point3d::Point3D,
+    sphere::Sphere, transform::Transform, vector3d::Vector3D, world::World,
 };
 
 use std::{
@@ -17,44 +17,65 @@ fn main() {
         )),
     };
 
-    let ray_origin = Point3D::new(0.0, 0.0, -5.0);
-    let wall_z = 10.0;
-    let wall_size = 7.0;
-    let canvas_pixels: usize = 100;
-    let size_per_pixel = wall_size / canvas_pixels as f32;
-    let half = wall_size / 2.0;
+    let mut world = World::new();
 
-    let mut canvas = Canvas::new(canvas_pixels, canvas_pixels);
-    let mut shape = Sphere::new();
-    let mut material = Material::new();
-    material.color = Color::new(1.0, 0.2, 1.0);
-    *shape.material_mut() = material;
+    let mut floor = Sphere::new();
+    *floor.transform_mut() = Transform::scaling(10.0, 0.01, 10.0);
+    floor.material_mut().color = Color::new(1.0, 0.9, 0.9);
+    floor.material_mut().specular = 0.0;
 
-    let light_position = Point3D::new(-10.0, 10.0, -10.0);
-    let light_color = Color::WHITE;
-    let light = Light::new(light_position, light_color);
+    let mut wall = Sphere::new();
+    *wall.transform_mut() = &(&(&Transform::translation(0.0, 0.0, 5.0)
+        * &Transform::rotation_y(-std::f32::consts::FRAC_PI_4))
+        * &Transform::rotation_x(std::f32::consts::FRAC_PI_2))
+        * &Transform::scaling(10.0, 0.01, 10.0);
+    *wall.material_mut() = floor.material().clone();
 
-    for y in 0..canvas.height() {
-        let world_y = half - (size_per_pixel * y as f32);
+    let mut right_wall = Sphere::new();
+    *right_wall.transform_mut() = &(&(&Transform::translation(0.0, 0.0, 5.0)
+        * &Transform::rotation_y(std::f32::consts::FRAC_PI_4))
+        * &Transform::rotation_x(std::f32::consts::FRAC_PI_2))
+        * &Transform::scaling(10.0, 0.01, 10.0);
+    *right_wall.material_mut() = floor.material().clone();
 
-        for x in 0..canvas.width() {
-            let world_x = -half + (size_per_pixel * x as f32);
-            let position = Point3D::new(world_x, world_y, wall_z);
-            let mut direction = &position - &ray_origin;
-            direction.normalize();
+    let mut middle = Sphere::new();
+    *middle.transform_mut() = Transform::translation(-0.5, 1.0, 0.5);
+    middle.material_mut().color = Color::new(0.1, 1.0, 0.5);
+    middle.material_mut().diffuse = 0.7;
 
-            let r = Ray::new(ray_origin.clone(), direction);
-            let xs = shape.intersect(&r);
+    let mut right = Sphere::new();
+    *right.transform_mut() = &Transform::translation(1.5, 0.5, -0.5)
+        * &Transform::scaling(0.5, 0.5, 0.5);
+    right.material_mut().color = Color::new(0.5, 1.0, 0.1);
+    right.material_mut().diffuse = 0.7;
+    right.material_mut().specular = 0.3;
 
-            if let Some(h) = hit(&xs) {
-                let point = r.position(h.t);
-                let normal = h.object.normal_at(&point);
-                let eye = -r.direction();
-                let color =
-                    h.object.material().lighting(&light, &point, &eye, &normal);
-                *canvas.color_at_mut(x, y) = color;
-            }
-        }
-    }
+    let mut left = Sphere::new();
+    *left.transform_mut() = &Transform::translation(-1.5, 0.33, -0.75)
+        * &Transform::scaling(0.33, 0.33, 0.33);
+    left.material_mut().color = Color::new(1.0, 0.8, 0.1);
+    left.material_mut().diffuse = 0.7;
+    left.material_mut().specular = 0.3;
+
+    world.add_shape(floor);
+    world.add_shape(wall);
+    world.add_shape(right_wall);
+    world.add_shape(middle);
+    world.add_shape(right);
+    world.add_shape(left);
+    world.add_light(Light::new(
+        Point3D::new(-10.0, 10.0, -10.0),
+        Color::new(1.0, 1.0, 1.0),
+    ));
+
+    let mut camera = Camera::new(100, 50, std::f32::consts::FRAC_PI_3);
+    *camera.transform_mut() = Transform::view_transform(
+        &Point3D::new(0.0, 1.5, -5.0),
+        &Point3D::new(0.0, 1.0, 0.0),
+        &Vector3D::new(0.0, 1.0, 0.0),
+    );
+
+    let canvas = camera.render(&world);
+
     canvas.to_ppm(&mut writer).expect("write failed");
 }
