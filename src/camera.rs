@@ -1,4 +1,6 @@
-use super::transform::Transform;
+use super::{
+    canvas::Canvas, point3d::Point3D, ray::Ray, transform::Transform,
+};
 
 #[derive(Debug)]
 pub struct Camera {
@@ -36,6 +38,30 @@ impl Camera {
             pixel_size,
         }
     }
+
+    pub fn transform(&self) -> &Transform {
+        &self.transform
+    }
+
+    pub fn transform_mut(&mut self) -> &mut Transform {
+        &mut self.transform
+    }
+
+    pub fn ray_for_pixel(&self, px: usize, py: usize) -> Ray {
+        let xoffset = (px as f32 + 0.5) * self.pixel_size;
+        let yoffset = (py as f32 + 0.5) * self.pixel_size;
+
+        let world_x = self.half_width - xoffset;
+        let world_y = self.half_height - yoffset;
+
+        let world_view = self.transform.inv();
+        let pixel = world_view * &Point3D::new(world_x, world_y, -1.0);
+        let origin = world_view * &Point3D::new(0.0, 0.0, 0.0);
+        let mut direction = &pixel - &origin;
+        direction.normalize();
+
+        return Ray::new(origin, direction);
+    }
 }
 
 #[cfg(test)]
@@ -65,5 +91,23 @@ mod tests {
     fn the_pixel_size_for_a_vertical_canvas() {
         let c = Camera::new(125, 200, std::f32::consts::FRAC_PI_2);
         assert_eq!(0.01, c.pixel_size);
+    }
+
+    #[test]
+    fn constructing_a_ray_through_the_center_of_the_canvas() {
+        let c = Camera::new(201, 101, std::f32::consts::FRAC_PI_2);
+        let r = c.ray_for_pixel(100, 50);
+
+        assert_eq!(Point3D::new(0.0, 0.0, 0.0), *r.origin());
+        assert_eq!(Vector3D::new(0.0, 0.0, -1.0), *r.direction());
+    }
+
+    #[test]
+    fn constructing_a_ray_through_a_corner_of_the_canvas() {
+        let c = Camera::new(201, 101, std::f32::consts::FRAC_PI_2);
+        let r = c.ray_for_pixel(0, 0);
+
+        assert_eq!(Point3D::new(0.0, 0.0, 0.0), *r.origin());
+        assert_eq!(Vector3D::new(0.66519, 0.33259, -0.66851), *r.direction());
     }
 }
