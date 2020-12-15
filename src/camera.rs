@@ -1,5 +1,6 @@
 use super::{
     canvas::Canvas, point3d::Point3D, ray::Ray, transform::Transform,
+    world::World,
 };
 
 #[derive(Debug)]
@@ -61,6 +62,19 @@ impl Camera {
         direction.normalize();
 
         return Ray::new(origin, direction);
+    }
+
+    pub fn render(&self, w: &World) -> Canvas {
+        let mut image = Canvas::new(self.hsize, self.vsize);
+
+        for y in 0..self.vsize {
+            for x in 0..self.hsize {
+                let ray = self.ray_for_pixel(x, y);
+                let color = w.color_at(&ray);
+                *image.color_at_mut(x, y) = color;
+            }
+        }
+        image
     }
 }
 
