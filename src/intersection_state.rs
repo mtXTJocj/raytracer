@@ -3,17 +3,30 @@ use super::{
     vector3d::Vector3D,
 };
 
+/// 交点における色の計算に必要な情報
 #[derive(Debug)]
 pub struct IntersectionState<'a> {
+    /// Ray と object が交差する場所での t
     pub(crate) t: f32,
+    /// Ray と交差した object
     pub(crate) object: &'a Sphere,
+    /// ワールド座標系における交差位置
     pub(crate) point: Point3D,
+    /// ワールド座標系における視線ベクトル
     pub(crate) eyev: Vector3D,
+    /// ワールド座標系における法線ベクトル
     pub(crate) normalv: Vector3D,
+    /// Ray の起点が object 内部であるか
     pub(crate) inside: bool,
 }
 
 impl<'a> IntersectionState<'a> {
+    /// 新規に IntersectionState を作成する
+    ///
+    /// # Arguments
+    ///
+    /// * `i` - 交点
+    /// * `r` - Ray
     pub(crate) fn new(i: &'a Intersection, r: &Ray) -> Self {
         let t = i.t;
         let object = i.object;

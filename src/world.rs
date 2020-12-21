@@ -4,13 +4,17 @@ use super::{
     sphere::Sphere,
 };
 
+/// レンダリングに用いるライトとオブジェクトを集約する
 #[derive(Debug)]
 pub struct World {
+    /// ライト
     lights: Vec<Light>,
+    /// オブジェクト
     shapes: Vec<Sphere>,
 }
 
 impl World {
+    /// 新規に World を作成する
     pub fn new() -> Self {
         World {
             lights: vec![],
@@ -18,14 +22,30 @@ impl World {
         }
     }
 
+    /// ライトを追加する
+    ///
+    /// # Arguments
+    ///
+    /// * `light` - 追加するライト
     pub fn add_light(&mut self, light: Light) {
         self.lights.push(light);
     }
 
+    /// オブジェクトを追加する
+    ///
+    /// # Arguments
+    ///
+    /// * `sphere` - 追加するオブジェクト
     pub fn add_shape(&mut self, sphere: Sphere) {
         self.shapes.push(sphere);
     }
 
+    /// Ray とオブジェクトの交差判定を行い、交差情報のリストを返す。
+    /// 返された交差情報は Ray の起点を基準にソートされている。
+    ///
+    /// # Arguments
+    ///
+    /// * `ray` - 判定対象となる Ray
     pub fn intersect(&self, ray: &Ray) -> Vec<Intersection> {
         let mut intersections = vec![];
         for shape in &self.shapes {
@@ -44,6 +64,11 @@ impl World {
         intersections
     }
 
+    /// Ray がヒットした点における色を返す。
+    ///
+    /// # Arguments
+    ///
+    /// * `intersection_state` - 計算に必要な交点情報
     fn shade_hit(&self, intersection_state: &IntersectionState) -> Color {
         let mut c = Color::new(0.0, 0.0, 0.0);
         for light in &self.lights {
@@ -58,6 +83,11 @@ impl World {
         c
     }
 
+    /// Ray に対応する色を返す。ヒットしなかった場合、黒を返す
+    ///
+    /// # Arguments
+    ///
+    /// * `r` - Ray
     pub fn color_at(&self, r: &Ray) -> Color {
         let xs = self.intersect(r);
         if xs.len() > 0 {

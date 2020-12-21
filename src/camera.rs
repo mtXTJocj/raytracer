@@ -5,25 +5,41 @@ use super::{
 
 #[derive(Debug)]
 pub struct Camera {
+    /// 出力画像の水平方向サイズ
     hsize: usize,
+    /// 出力画像の垂直方向サイズ
     vsize: usize,
+    /// 視野角
     field_of_view: f32,
+    /// View-World transform
     transform: Transform,
+    /// カメラから距離 1 における width の半分の値
     half_width: f32,
+    /// カメラから距離 1 における height の半分の値
     half_height: f32,
+    /// 1 pixel あたりのサイズ
     pixel_size: f32,
 }
 
 impl Camera {
+    /// 新規に Camera を作成する
+    ///
+    /// # Argumets
+    /// * `hsize` - 出力画像の水平方向サイズ
+    /// * `vsize` - 出力画像の垂直方向サイズ
+    /// * `field_of_view` - 視野角(rad)
     pub fn new(hsize: usize, vsize: usize, field_of_view: f32) -> Self {
         let half_view = (field_of_view / 2.0).tan();
         let aspect = hsize as f32 / (vsize as f32);
         let half_width;
         let half_height;
+        // 長辺を基準にする
         if aspect >= 1.0 {
+            // hsize >= vsize
             half_width = half_view;
             half_height = half_view / aspect;
         } else {
+            // hsize < vsize
             half_width = half_view * aspect;
             half_height = half_view;
         }
@@ -40,14 +56,21 @@ impl Camera {
         }
     }
 
+    /// カメラの変換行列(View-World transform)を取得する
     pub fn transform(&self) -> &Transform {
         &self.transform
     }
 
+    /// カメラの変換行列(View-World transform)を取得する
     pub fn transform_mut(&mut self) -> &mut Transform {
         &mut self.transform
     }
 
+    /// 出力画像上の指定した pixel を通る Ray を生成する
+    ///
+    /// # Argumets
+    /// * `px` - 出力画像の x 座標
+    /// * `py` - 出力画像の y 座標
     fn ray_for_pixel(&self, px: usize, py: usize) -> Ray {
         let xoffset = (px as f32 + 0.5) * self.pixel_size;
         let yoffset = (py as f32 + 0.5) * self.pixel_size;
@@ -64,6 +87,10 @@ impl Camera {
         return Ray::new(origin, direction);
     }
 
+    /// World をレンダリングする
+    ///
+    /// # Argumets
+    /// * `w` - レンダリング対象
     pub fn render(&self, w: &World) -> Canvas {
         let mut image = Canvas::new(self.hsize, self.vsize);
 
