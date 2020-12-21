@@ -44,7 +44,7 @@ impl World {
         intersections
     }
 
-    pub fn shade_hit(&self, intersection_state: &IntersectionState) -> Color {
+    fn shade_hit(&self, intersection_state: &IntersectionState) -> Color {
         let mut c = Color::new(0.0, 0.0, 0.0);
         for light in &self.lights {
             c = &c

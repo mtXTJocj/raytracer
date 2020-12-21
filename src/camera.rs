@@ -48,7 +48,7 @@ impl Camera {
         &mut self.transform
     }
 
-    pub fn ray_for_pixel(&self, px: usize, py: usize) -> Ray {
+    fn ray_for_pixel(&self, px: usize, py: usize) -> Ray {
         let xoffset = (px as f32 + 0.5) * self.pixel_size;
         let yoffset = (py as f32 + 0.5) * self.pixel_size;
 
