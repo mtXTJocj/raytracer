@@ -1,4 +1,6 @@
-use super::{color::Color, light::Light, point3d::Point3D, vector3d::Vector3D};
+use super::{
+    color::Color, light::Light, point3d::Point3D, vector3d::Vector3D, FLOAT,
+};
 
 /// マテリアル
 #[derive(Debug, Clone)]
@@ -6,13 +8,13 @@ pub struct Material {
     /// 色
     pub color: Color,
     /// 環境光の強さ
-    pub ambient: f32,
+    pub ambient: FLOAT,
     /// 拡散反射光の強さ
-    pub diffuse: f32,
+    pub diffuse: FLOAT,
     /// 鏡面反射光の強さ
-    pub specular: f32,
+    pub specular: FLOAT,
     /// 鏡面反射光の広がり。大きい程、狭く強い。
-    pub shininess: f32,
+    pub shininess: FLOAT,
 }
 
 impl Material {
@@ -100,7 +102,11 @@ mod tests {
     fn lighting_with_the_eye_between_light_and_surface_eye_offset_45deg() {
         let m = Material::new();
         let p = Point3D::new(0.0, 0.0, 0.0);
-        let eyev = Vector3D::new(0.0, 2f32.sqrt() / 2.0, -2f32.sqrt() / 2.0);
+        let eyev = Vector3D::new(
+            0.0,
+            2f32.sqrt() as FLOAT / 2.0,
+            -2f32.sqrt() as FLOAT / 2.0,
+        );
         let normalv = Vector3D::new(0.0, 0.0, -1.0);
         let light = Light::new(Point3D::new(0.0, 0.0, -10.0), Color::WHITE);
 
@@ -124,7 +130,11 @@ mod tests {
     fn lighting_with_eye_in_the_path_of_the_reflection_vector() {
         let m = Material::new();
         let p = Point3D::new(0.0, 0.0, 0.0);
-        let eyev = Vector3D::new(0.0, -2f32.sqrt() / 2.0, -2f32.sqrt() / 2.0);
+        let eyev = Vector3D::new(
+            0.0,
+            -2f32.sqrt() as FLOAT / 2.0,
+            -2f32.sqrt() as FLOAT / 2.0,
+        );
         let normalv = Vector3D::new(0.0, 0.0, -1.0);
         let light = Light::new(Point3D::new(0.0, 10.0, -10.0), Color::WHITE);
 

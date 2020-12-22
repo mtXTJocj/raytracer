@@ -1,10 +1,10 @@
-use super::sphere::Sphere;
+use super::{sphere::Sphere, FLOAT};
 
 /// Ray とオブジェクトとの交点
 #[derive(Debug)]
 pub struct Intersection<'a> {
     /// 交差する Ray の始点からの距離
-    pub t: f32,
+    pub t: FLOAT,
     /// Ray と交差したオブジェクト
     pub object: &'a Sphere,
 }
@@ -17,7 +17,7 @@ pub struct Intersection<'a> {
 pub fn hit<'a, 'b>(
     xs: &'a Vec<Intersection<'b>>,
 ) -> Option<&'a Intersection<'b>> {
-    let mut min_t = std::f32::MAX;
+    let mut min_t = std::f32::MAX as FLOAT;
     let mut result = None;
 
     for x in xs {

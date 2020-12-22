@@ -1,6 +1,7 @@
 use raytracer::{
     camera::Camera, color::Color, light::Light, point3d::Point3D,
     sphere::Sphere, transform::Transform, vector3d::Vector3D, world::World,
+    FLOAT,
 };
 
 use std::{
@@ -26,15 +27,15 @@ fn main() {
 
     let mut wall = Sphere::new();
     *wall.transform_mut() = &(&(&Transform::translation(0.0, 0.0, 5.0)
-        * &Transform::rotation_y(-std::f32::consts::FRAC_PI_4))
-        * &Transform::rotation_x(std::f32::consts::FRAC_PI_2))
+        * &Transform::rotation_y(-std::f32::consts::FRAC_PI_4 as FLOAT))
+        * &Transform::rotation_x(std::f32::consts::FRAC_PI_2 as FLOAT))
         * &Transform::scaling(10.0, 0.01, 10.0);
     *wall.material_mut() = floor.material().clone();
 
     let mut right_wall = Sphere::new();
     *right_wall.transform_mut() = &(&(&Transform::translation(0.0, 0.0, 5.0)
-        * &Transform::rotation_y(std::f32::consts::FRAC_PI_4))
-        * &Transform::rotation_x(std::f32::consts::FRAC_PI_2))
+        * &Transform::rotation_y(std::f32::consts::FRAC_PI_4 as FLOAT))
+        * &Transform::rotation_x(std::f32::consts::FRAC_PI_2 as FLOAT))
         * &Transform::scaling(10.0, 0.01, 10.0);
     *right_wall.material_mut() = floor.material().clone();
 
@@ -68,7 +69,8 @@ fn main() {
         Color::new(1.0, 1.0, 1.0),
     ));
 
-    let mut camera = Camera::new(100, 50, std::f32::consts::FRAC_PI_3);
+    let mut camera =
+        Camera::new(300, 150, std::f32::consts::FRAC_PI_3 as FLOAT);
     *camera.transform_mut() = Transform::view_transform(
         &Point3D::new(0.0, 1.5, -5.0),
         &Point3D::new(0.0, 1.0, 0.0),

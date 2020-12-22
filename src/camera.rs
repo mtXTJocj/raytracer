@@ -1,6 +1,6 @@
 use super::{
     canvas::Canvas, point3d::Point3D, ray::Ray, transform::Transform,
-    world::World,
+    world::World, FLOAT,
 };
 
 #[derive(Debug)]
@@ -10,15 +10,15 @@ pub struct Camera {
     /// 出力画像の垂直方向サイズ
     vsize: usize,
     /// 視野角
-    field_of_view: f32,
+    field_of_view: FLOAT,
     /// View-World transform
     transform: Transform,
     /// カメラから距離 1 における width の半分の値
-    half_width: f32,
+    half_width: FLOAT,
     /// カメラから距離 1 における height の半分の値
-    half_height: f32,
+    half_height: FLOAT,
     /// 1 pixel あたりのサイズ
-    pixel_size: f32,
+    pixel_size: FLOAT,
 }
 
 impl Camera {
@@ -28,9 +28,9 @@ impl Camera {
     /// * `hsize` - 出力画像の水平方向サイズ
     /// * `vsize` - 出力画像の垂直方向サイズ
     /// * `field_of_view` - 視野角(rad)
-    pub fn new(hsize: usize, vsize: usize, field_of_view: f32) -> Self {
+    pub fn new(hsize: usize, vsize: usize, field_of_view: FLOAT) -> Self {
         let half_view = (field_of_view / 2.0).tan();
-        let aspect = hsize as f32 / (vsize as f32);
+        let aspect = hsize as FLOAT / (vsize as FLOAT);
         let half_width;
         let half_height;
         // 長辺を基準にする
@@ -43,7 +43,7 @@ impl Camera {
             half_width = half_view * aspect;
             half_height = half_view;
         }
-        let pixel_size = (half_width * 2.0) / (hsize as f32);
+        let pixel_size = (half_width * 2.0) / (hsize as FLOAT);
 
         Camera {
             hsize,
@@ -72,8 +72,8 @@ impl Camera {
     /// * `px` - 出力画像の x 座標
     /// * `py` - 出力画像の y 座標
     fn ray_for_pixel(&self, px: usize, py: usize) -> Ray {
-        let xoffset = (px as f32 + 0.5) * self.pixel_size;
-        let yoffset = (py as f32 + 0.5) * self.pixel_size;
+        let xoffset = (px as FLOAT + 0.5) * self.pixel_size;
+        let yoffset = (py as FLOAT + 0.5) * self.pixel_size;
 
         let world_x = self.half_width - xoffset;
         let world_y = self.half_height - yoffset;
@@ -107,36 +107,39 @@ impl Camera {
 
 #[cfg(test)]
 mod tests {
-    use super::{super::vector3d::Vector3D, *};
+    use super::{
+        super::{approx_eq, vector3d::Vector3D},
+        *,
+    };
 
     #[test]
     fn constructing_camera() {
         let hsize = 160;
         let vsize = 120;
-        let field_of_view = std::f32::consts::FRAC_PI_2;
+        let field_of_view = std::f32::consts::FRAC_PI_2 as FLOAT;
         let c = Camera::new(hsize, vsize, field_of_view);
 
         assert_eq!(160, c.hsize);
         assert_eq!(120, c.vsize);
-        assert_eq!(std::f32::consts::FRAC_PI_2, c.field_of_view);
+        assert_eq!(std::f32::consts::FRAC_PI_2 as FLOAT, c.field_of_view);
         assert_eq!(Transform::identity(), c.transform);
     }
 
     #[test]
     fn the_pixel_size_for_a_horizontal_canvas() {
-        let c = Camera::new(200, 125, std::f32::consts::FRAC_PI_2);
-        assert_eq!(0.01, c.pixel_size);
+        let c = Camera::new(200, 125, std::f32::consts::FRAC_PI_2 as FLOAT);
+        assert!(approx_eq(0.01, c.pixel_size));
     }
 
     #[test]
     fn the_pixel_size_for_a_vertical_canvas() {
-        let c = Camera::new(125, 200, std::f32::consts::FRAC_PI_2);
-        assert_eq!(0.01, c.pixel_size);
+        let c = Camera::new(125, 200, std::f32::consts::FRAC_PI_2 as FLOAT);
+        assert!(approx_eq(0.01, c.pixel_size));
     }
 
     #[test]
     fn constructing_a_ray_through_the_center_of_the_canvas() {
-        let c = Camera::new(201, 101, std::f32::consts::FRAC_PI_2);
+        let c = Camera::new(201, 101, std::f32::consts::FRAC_PI_2 as FLOAT);
         let r = c.ray_for_pixel(100, 50);
 
         assert_eq!(Point3D::new(0.0, 0.0, 0.0), *r.origin());
@@ -145,7 +148,7 @@ mod tests {
 
     #[test]
     fn constructing_a_ray_through_a_corner_of_the_canvas() {
-        let c = Camera::new(201, 101, std::f32::consts::FRAC_PI_2);
+        let c = Camera::new(201, 101, std::f32::consts::FRAC_PI_2 as FLOAT);
         let r = c.ray_for_pixel(0, 0);
 
         assert_eq!(Point3D::new(0.0, 0.0, 0.0), *r.origin());

@@ -13,8 +13,9 @@ pub mod transform;
 pub mod vector3d;
 pub mod world;
 
-const EPSILON: f32 = 0.0001;
+pub type FLOAT = f64;
+const EPSILON: FLOAT = 0.00001;
 
-fn approx_eq(a: f32, b: f32) -> bool {
+fn approx_eq(a: FLOAT, b: FLOAT) -> bool {
     (a - b).abs() < EPSILON
 }

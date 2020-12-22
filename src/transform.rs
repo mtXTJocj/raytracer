@@ -1,5 +1,5 @@
 use super::{
-    matrix4x4::Matrix4x4, point3d::Point3D, ray::Ray, vector3d::Vector3D,
+    matrix4x4::Matrix4x4, point3d::Point3D, ray::Ray, vector3d::Vector3D, FLOAT,
 };
 use std::{cmp::PartialEq, ops::Mul};
 
@@ -25,7 +25,7 @@ impl Transform {
     /// * `x` - x 方向の移動量
     /// * `y` - y 方向の移動量
     /// * `z` - z 方向の移動量
-    pub fn translation(x: f32, y: f32, z: f32) -> Self {
+    pub fn translation(x: FLOAT, y: FLOAT, z: FLOAT) -> Self {
         let mat = Matrix4x4::new([
             1.0, 0.0, 0.0, x, 0.0, 1.0, 0.0, y, 0.0, 0.0, 1.0, z, 0.0, 0.0,
             0.0, 1.0,
@@ -43,7 +43,7 @@ impl Transform {
     /// * `x` - x 方向のスケール
     /// * `y` - y 方向のスケール
     /// * `z` - z 方向のスケール
-    pub fn scaling(x: f32, y: f32, z: f32) -> Self {
+    pub fn scaling(x: FLOAT, y: FLOAT, z: FLOAT) -> Self {
         assert!(x != 0.0);
         assert!(y != 0.0);
         assert!(z != 0.0);
@@ -77,7 +77,7 @@ impl Transform {
     ///
     /// # Argumets
     /// * `a` - 回転角(rad)
-    pub fn rotation_x(a: f32) -> Self {
+    pub fn rotation_x(a: FLOAT) -> Self {
         let mat = Matrix4x4::new([
             1.0,
             0.0,
@@ -104,7 +104,7 @@ impl Transform {
     ///
     /// # Argumets
     /// * `a` - 回転角(rad)
-    pub fn rotation_y(a: f32) -> Self {
+    pub fn rotation_y(a: FLOAT) -> Self {
         let mat = Matrix4x4::new([
             a.cos(),
             0.0,
@@ -131,7 +131,7 @@ impl Transform {
     ///
     /// # Argumets
     /// * `a` - 回転角(rad)
-    pub fn rotation_z(a: f32) -> Self {
+    pub fn rotation_z(a: FLOAT) -> Self {
         let mat = Matrix4x4::new([
             a.cos(),
             -a.sin(),
@@ -164,12 +164,12 @@ impl Transform {
     /// * `zx` - x の変化量に対する z の変化量
     /// * `zy` - y の変化量に対する z の変化量
     pub fn shearing(
-        xy: f32,
-        xz: f32,
-        yx: f32,
-        yz: f32,
-        zx: f32,
-        zy: f32,
+        xy: FLOAT,
+        xz: FLOAT,
+        yx: FLOAT,
+        yz: FLOAT,
+        zx: FLOAT,
+        zy: FLOAT,
     ) -> Self {
         let mat = Matrix4x4::new([
             1.0, xy, xz, 0.0, yx, 1.0, yz, 0.0, zx, zy, 1.0, 0.0, 0.0, 0.0,
@@ -339,11 +339,17 @@ mod tests {
     #[test]
     fn rotating_a_point_around_the_x_axis() {
         let p = Point3D::new(0.0, 1.0, 0.0);
-        let half_quarter = Transform::rotation_x(std::f32::consts::FRAC_PI_4);
-        let full_quarter = Transform::rotation_x(std::f32::consts::FRAC_PI_2);
+        let half_quarter =
+            Transform::rotation_x(std::f32::consts::FRAC_PI_4 as FLOAT);
+        let full_quarter =
+            Transform::rotation_x(std::f32::consts::FRAC_PI_2 as FLOAT);
 
         assert_eq!(
-            Point3D::new(0.0, 2f32.sqrt() / 2.0, 2f32.sqrt() / 2.0),
+            Point3D::new(
+                0.0,
+                2f32.sqrt() as FLOAT / 2.0,
+                2f32.sqrt() as FLOAT / 2.0
+            ),
             &half_quarter * &p
         );
         assert_eq!(Point3D::new(0.0, 0.0, 1.0), &full_quarter * &p);
@@ -352,10 +358,15 @@ mod tests {
     #[test]
     fn the_inverse_of_an_x_rotation_rotates_in_the_opposite_direction() {
         let p = Point3D::new(0.0, 1.0, 0.0);
-        let half_quarter = Transform::rotation_x(std::f32::consts::FRAC_PI_4);
+        let half_quarter =
+            Transform::rotation_x(std::f32::consts::FRAC_PI_4 as FLOAT);
 
         assert_eq!(
-            Point3D::new(0.0, 2f32.sqrt() / 2.0, -2f32.sqrt() / 2.0),
+            Point3D::new(
+                0.0,
+                2f32.sqrt() as FLOAT / 2.0,
+                -2f32.sqrt() as FLOAT / 2.0
+            ),
             half_quarter.inv() * &p
         );
     }
@@ -363,11 +374,17 @@ mod tests {
     #[test]
     fn rotating_a_point_around_the_y_axis() {
         let p = Point3D::new(0.0, 0.0, 1.0);
-        let half_quarter = Transform::rotation_y(std::f32::consts::FRAC_PI_4);
-        let full_quarter = Transform::rotation_y(std::f32::consts::FRAC_PI_2);
+        let half_quarter =
+            Transform::rotation_y(std::f32::consts::FRAC_PI_4 as FLOAT);
+        let full_quarter =
+            Transform::rotation_y(std::f32::consts::FRAC_PI_2 as FLOAT);
 
         assert_eq!(
-            Point3D::new(2f32.sqrt() / 2.0, 0.0, 2f32.sqrt() / 2.0),
+            Point3D::new(
+                2f32.sqrt() as FLOAT / 2.0,
+                0.0,
+                2f32.sqrt() as FLOAT / 2.0
+            ),
             &half_quarter * &p
         );
         assert_eq!(Point3D::new(1.0, 0.0, 0.0), &full_quarter * &p);
@@ -376,11 +393,17 @@ mod tests {
     #[test]
     fn rotating_a_point_around_the_z_axis() {
         let p = Point3D::new(0.0, 1.0, 0.0);
-        let half_quarter = Transform::rotation_z(std::f32::consts::FRAC_PI_4);
-        let full_quarter = Transform::rotation_z(std::f32::consts::FRAC_PI_2);
+        let half_quarter =
+            Transform::rotation_z(std::f32::consts::FRAC_PI_4 as FLOAT);
+        let full_quarter =
+            Transform::rotation_z(std::f32::consts::FRAC_PI_2 as FLOAT);
 
         assert_eq!(
-            Point3D::new(-2f32.sqrt() / 2.0, 2f32.sqrt() / 2.0, 0.0),
+            Point3D::new(
+                -2f32.sqrt() as FLOAT / 2.0,
+                2f32.sqrt() as FLOAT / 2.0,
+                0.0
+            ),
             &half_quarter * &p
         );
         assert_eq!(Point3D::new(-1.0, 0.0, 0.0), &full_quarter * &p);
@@ -437,7 +460,7 @@ mod tests {
     #[test]
     fn individual_transformations_are_applied_in_sequence() {
         let p = Point3D::new(1.0, 0.0, 1.0);
-        let a = Transform::rotation_x(std::f32::consts::FRAC_PI_2);
+        let a = Transform::rotation_x(std::f32::consts::FRAC_PI_2 as FLOAT);
         let b = Transform::scaling(5.0, 5.0, 5.0);
         let c = Transform::translation(10.0, 5.0, 7.0);
 
@@ -454,7 +477,7 @@ mod tests {
     #[test]
     fn chained_transformations_must_be_applied_in_reverse_order() {
         let p = Point3D::new(1.0, 0.0, 1.0);
-        let a = Transform::rotation_x(std::f32::consts::FRAC_PI_2);
+        let a = Transform::rotation_x(std::f32::consts::FRAC_PI_2 as FLOAT);
         let b = Transform::scaling(5.0, 5.0, 5.0);
         let c = Transform::translation(10.0, 5.0, 7.0);
         let t = &c * &(&b * &a);
@@ -465,7 +488,7 @@ mod tests {
     #[test]
     fn chained_inverse_transformations_must_be_applied_in_reverse_order() {
         let p = Point3D::new(15.0, 0.0, 7.0);
-        let a = Transform::rotation_x(std::f32::consts::FRAC_PI_2);
+        let a = Transform::rotation_x(std::f32::consts::FRAC_PI_2 as FLOAT);
         let b = Transform::scaling(5.0, 5.0, 5.0);
         let c = Transform::translation(10.0, 5.0, 7.0);
         let t = &c * &(&b * &a);

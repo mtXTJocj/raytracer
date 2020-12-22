@@ -104,7 +104,7 @@ mod tests {
     use super::{
         super::{
             approx_eq, camera::Camera, color::Color, material::Material,
-            point3d::Point3D, transform::Transform, vector3d::Vector3D,
+            transform::Transform, vector3d::Vector3D, FLOAT,
         },
         *,
     };
@@ -244,7 +244,7 @@ mod tests {
     #[test]
     fn rendering_a_world_with_a_camera() {
         let w = default_world();
-        let mut c = Camera::new(11, 11, std::f32::consts::FRAC_PI_2);
+        let mut c = Camera::new(11, 11, std::f32::consts::FRAC_PI_2 as FLOAT);
         let from = Point3D::new(0.0, 0.0, -5.0);
         let to = Point3D::new(0.0, 0.0, 0.0);
         let up = Vector3D::new(0.0, 1.0, 0.0);

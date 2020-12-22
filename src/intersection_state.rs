@@ -1,13 +1,13 @@
 use super::{
     intersection::Intersection, point3d::Point3D, ray::Ray, sphere::Sphere,
-    vector3d::Vector3D,
+    vector3d::Vector3D, EPSILON, FLOAT,
 };
 
 /// 交点における色の計算に必要な情報
 #[derive(Debug)]
 pub struct IntersectionState<'a> {
     /// Ray と object が交差する場所での t
-    pub(crate) t: f32,
+    pub(crate) t: FLOAT,
     /// Ray と交差した object
     pub(crate) object: &'a Sphere,
     /// ワールド座標系における交差位置

@@ -90,7 +90,11 @@ impl Sphere {
 
 #[cfg(test)]
 mod tests {
-    use super::{super::approx_eq, super::vector3d::Vector3D, *};
+    use super::{
+        super::vector3d::Vector3D,
+        super::{approx_eq, FLOAT},
+        *,
+    };
 
     #[test]
     fn a_ray_intersects_a_sphere_at_two_points() {
@@ -240,16 +244,16 @@ mod tests {
     fn the_normal_on_a_sphere_at_a_nonaxial_point() {
         let s = Sphere::new();
         let n = s.normal_at(&Point3D::new(
-            3f32.sqrt() / 3.0,
-            3f32.sqrt() / 3.0,
-            3f32.sqrt() / 3.0,
+            3f32.sqrt() as FLOAT / 3.0,
+            3f32.sqrt() as FLOAT / 3.0,
+            3f32.sqrt() as FLOAT / 3.0,
         ));
 
         assert_eq!(
             Vector3D::new(
-                3f32.sqrt() / 3.0,
-                3f32.sqrt() / 3.0,
-                3f32.sqrt() / 3.0,
+                3f32.sqrt() as FLOAT / 3.0,
+                3f32.sqrt() as FLOAT / 3.0,
+                3f32.sqrt() as FLOAT / 3.0,
             ),
             n
         );
@@ -259,16 +263,16 @@ mod tests {
     fn the_normal_is_a_normalized_vector() {
         let s = Sphere::new();
         let mut n = s.normal_at(&Point3D::new(
-            3f32.sqrt() / 3.0,
-            3f32.sqrt() / 3.0,
-            3f32.sqrt() / 3.0,
+            3f32.sqrt() as FLOAT / 3.0,
+            3f32.sqrt() as FLOAT / 3.0,
+            3f32.sqrt() as FLOAT / 3.0,
         ));
 
         assert_eq!(
             s.normal_at(&Point3D::new(
-                3f32.sqrt() / 3.0,
-                3f32.sqrt() / 3.0,
-                3f32.sqrt() / 3.0
+                3f32.sqrt() as FLOAT / 3.0,
+                3f32.sqrt() as FLOAT / 3.0,
+                3f32.sqrt() as FLOAT / 3.0
             )),
             *n.normalize()
         );
@@ -287,12 +291,12 @@ mod tests {
     fn computing_the_normal_on_a_transformed_sphere() {
         let mut s = Sphere::new();
         *s.transform_mut() = &Transform::scaling(1.0, 0.5, 1.0)
-            * &Transform::rotation_z(std::f32::consts::PI / 5.0);
+            * &Transform::rotation_z(std::f32::consts::PI as FLOAT / 5.0);
 
         let n = s.normal_at(&Point3D::new(
             0.0,
-            2f32.sqrt() / 2.0,
-            -2f32.sqrt() / 2.0,
+            2f32.sqrt() as FLOAT / 2.0,
+            -2f32.sqrt() as FLOAT / 2.0,
         ));
         assert_eq!(Vector3D::new(0.0, 0.97014, -0.24254), n);
     }
