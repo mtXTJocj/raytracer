@@ -179,6 +179,28 @@ impl Transform {
         Transform { mat, inv }
     }
 
+    pub fn view_transform(from: &Point3D, to: &Point3D, up: &Vector3D) -> Self {
+        let mut forward = to - from;
+        forward.normalize();
+        let mut normalized_up = up.clone();
+        normalized_up.normalize();
+        let left = forward.cross(&normalized_up);
+        let true_up = left.cross(&forward);
+
+        let orientation = Matrix4x4::new([
+            left.x, left.y, left.z, 0.0, true_up.x, true_up.y, true_up.z, 0.0,
+            -forward.x, -forward.y, -forward.z, 0.0, 0.0, 0.0, 0.0, 1.0,
+        ]);
+        let translation = Matrix4x4::new([
+            1.0, 0.0, 0.0, -from.x, 0.0, 1.0, 0.0, -from.y, 0.0, 0.0, 1.0,
+            -from.z, 0.0, 0.0, 0.0, 1.0,
+        ]);
+        let mat = &orientation * &translation;
+        let inv = mat.inverse();
+
+        Transform { mat, inv }
+    }
+
     /// 逆変換の行列を取得する
     pub fn inv(&self) -> &Matrix4x4 {
         &self.inv
@@ -473,5 +495,52 @@ mod tests {
 
         assert_eq!(Point3D::new(2.0, 6.0, 12.0), *r2.origin());
         assert_eq!(Vector3D::new(0.0, 3.0, 0.0), *r2.direction());
+    }
+
+    #[test]
+    fn the_transformation_matrix_for_the_default_orientation() {
+        let from = Point3D::new(0.0, 0.0, 0.0);
+        let to = Point3D::new(0.0, 0.0, -1.0);
+        let up = Vector3D::new(0.0, 1.0, 0.0);
+
+        let t = Transform::view_transform(&from, &to, &up);
+        assert_eq!(Transform::identity(), t);
+    }
+
+    #[test]
+    fn a_view_transformation_matrix_looking_in_positive_z() {
+        let from = Point3D::new(0.0, 0.0, 0.0);
+        let to = Point3D::new(0.0, 0.0, 1.0);
+        let up = Vector3D::new(0.0, 1.0, 0.0);
+
+        let t = Transform::view_transform(&from, &to, &up);
+        assert_eq!(Transform::scaling(-1.0, 1.0, -1.0), t);
+    }
+
+    #[test]
+    fn the_view_transformation_moves_the_world() {
+        let from = Point3D::new(0.0, 0.0, 8.0);
+        let to = Point3D::new(0.0, 0.0, 0.0);
+        let up = Vector3D::new(0.0, 1.0, 0.0);
+
+        let t = Transform::view_transform(&from, &to, &up);
+        assert_eq!(Transform::translation(0.0, 0.0, -8.0), t);
+    }
+
+    #[test]
+    fn an_arbitrary_view_transformation() {
+        let from = Point3D::new(1.0, 3.0, 2.0);
+        let to = Point3D::new(4.0, -2.0, 8.0);
+        let up = Vector3D::new(1.0, 1.0, 0.0);
+
+        let t = Transform::view_transform(&from, &to, &up);
+
+        let mat = Matrix4x4::new([
+            -0.50709, 0.50709, 0.67612, -2.36643, 0.76772, 0.60609, 0.12122,
+            -2.82843, -0.35857, 0.59761, -0.71714, 0.00000, 0.00000, 0.00000,
+            0.00000, 1.0,
+        ]);
+        let inv = mat.inverse();
+        assert_eq!(Transform { mat, inv }, t);
     }
 }

@@ -1,7 +1,7 @@
 use super::{color::Color, light::Light, point3d::Point3D, vector3d::Vector3D};
 
 /// マテリアル
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Material {
     /// 色
     pub color: Color,
