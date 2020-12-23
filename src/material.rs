@@ -37,24 +37,28 @@ impl Material {
     /// * `point` - 計算を行うオブジェクト上の点
     /// * `eyev` - 視線ベクトル
     /// * `normalv` - point における法線ベクトル
+    /// * `in_shadow` - 影の中にいるか
     pub fn lighting(
         &self,
         light: &Light,
         point: &Point3D,
         eyev: &Vector3D,
         normalv: &Vector3D,
+        in_shadow: bool,
     ) -> Color {
         let effective_color = &self.color * light.intensity();
         let mut lightv = light.position() - point;
         lightv.normalize();
         let ambient = &effective_color * self.ambient;
+        if in_shadow {
+            return ambient;
+        }
 
         let diffuse;
         let specular;
         let light_dot_normal = lightv.dot(normalv);
         if light_dot_normal < 0.0 {
-            diffuse = Color::BLACK;
-            specular = Color::BLACK;
+            return ambient;
         } else {
             diffuse = &(&effective_color * self.diffuse) * light_dot_normal;
             let reflectv = (-&lightv).reflect(&normalv);
@@ -94,7 +98,7 @@ mod tests {
         let normalv = Vector3D::new(0.0, 0.0, -1.0);
         let light = Light::new(Point3D::new(0.0, 0.0, -10.0), Color::WHITE);
 
-        let result = m.lighting(&light, &p, &eyev, &normalv);
+        let result = m.lighting(&light, &p, &eyev, &normalv, false);
         assert_eq!(Color::new(1.9, 1.9, 1.9), result);
     }
 
@@ -110,7 +114,7 @@ mod tests {
         let normalv = Vector3D::new(0.0, 0.0, -1.0);
         let light = Light::new(Point3D::new(0.0, 0.0, -10.0), Color::WHITE);
 
-        let result = m.lighting(&light, &p, &eyev, &normalv);
+        let result = m.lighting(&light, &p, &eyev, &normalv, false);
         assert_eq!(Color::new(1.0, 1.0, 1.0), result);
     }
 
@@ -122,7 +126,7 @@ mod tests {
         let normalv = Vector3D::new(0.0, 0.0, -1.0);
         let light = Light::new(Point3D::new(0.0, 10.0, -10.0), Color::WHITE);
 
-        let result = m.lighting(&light, &p, &eyev, &normalv);
+        let result = m.lighting(&light, &p, &eyev, &normalv, false);
         assert_eq!(Color::new(0.7364, 0.7364, 0.7364), result);
     }
 
@@ -138,7 +142,7 @@ mod tests {
         let normalv = Vector3D::new(0.0, 0.0, -1.0);
         let light = Light::new(Point3D::new(0.0, 10.0, -10.0), Color::WHITE);
 
-        let result = m.lighting(&light, &p, &eyev, &normalv);
+        let result = m.lighting(&light, &p, &eyev, &normalv, false);
         assert_eq!(Color::new(1.6364, 1.6364, 1.6364), result);
     }
 
@@ -150,7 +154,20 @@ mod tests {
         let normalv = Vector3D::new(0.0, 0.0, -1.0);
         let light = Light::new(Point3D::new(0.0, 0.0, 10.0), Color::WHITE);
 
-        let result = m.lighting(&light, &p, &eyev, &normalv);
+        let result = m.lighting(&light, &p, &eyev, &normalv, false);
+        assert_eq!(Color::new(0.1, 0.1, 0.1), result);
+    }
+
+    #[test]
+    fn lighting_with_the_surface_in_shadow() {
+        let m = Material::new();
+        let p = Point3D::new(0.0, 0.0, 0.0);
+        let eyev = Vector3D::new(0.0, 0.0, -1.0);
+        let normalv = Vector3D::new(0.0, 0.0, -1.0);
+        let light = Light::new(Point3D::new(0.0, 0.0, -10.0), Color::WHITE);
+        let in_shadow = true;
+
+        let result = m.lighting(&light, &p, &eyev, &normalv, in_shadow);
         assert_eq!(Color::new(0.1, 0.1, 0.1), result);
     }
 }

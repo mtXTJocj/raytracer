@@ -12,6 +12,7 @@ pub struct IntersectionState<'a> {
     pub(crate) object: &'a Sphere,
     /// ワールド座標系における交差位置
     pub(crate) point: Point3D,
+    pub(crate) over_point: Point3D,
     /// ワールド座標系における視線ベクトル
     pub(crate) eyev: Vector3D,
     /// ワールド座標系における法線ベクトル
@@ -39,11 +40,13 @@ impl<'a> IntersectionState<'a> {
         } else {
             false
         };
+        let over_point = &point + &(&normalv * EPSILON);
 
         IntersectionState {
             t,
             object,
             point,
+            over_point,
             eyev,
             normalv,
             inside,

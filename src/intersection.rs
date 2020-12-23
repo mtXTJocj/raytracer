@@ -31,7 +31,13 @@ pub fn hit<'a, 'b>(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::{
+        super::{
+            intersection_state::IntersectionState, point3d::Point3D, ray::Ray,
+            transform::Transform, vector3d::Vector3D, EPSILON,
+        },
+        *,
+    };
 
     #[test]
     fn an_intersection_encapsulates_t_and_object() {
@@ -119,5 +125,22 @@ mod tests {
         } else {
             assert!(false);
         }
+    }
+
+    #[test]
+    fn the_hit_should_offset_the_point() {
+        let r = Ray::new(
+            Point3D::new(0.0, 0.0, -5.0),
+            Vector3D::new(0.0, 0.0, 1.0),
+        );
+        let mut shape = Sphere::new();
+        *shape.transform_mut() = Transform::translation(0.0, 0.0, 1.0);
+        let i = Intersection {
+            t: 5.0,
+            object: &shape,
+        };
+
+        let comps = IntersectionState::new(&i, &r);
+        assert!(comps.over_point.z < EPSILON / 2.0);
     }
 }
