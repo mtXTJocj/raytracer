@@ -12,6 +12,7 @@ pub struct IntersectionState<'a> {
     pub(crate) object: &'a Sphere,
     /// ワールド座標系における交差位置
     pub(crate) point: Point3D,
+    /// self intersection を避けるため point に offset を加えたもの
     pub(crate) over_point: Point3D,
     /// ワールド座標系における視線ベクトル
     pub(crate) eyev: Vector3D,

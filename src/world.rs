@@ -105,6 +105,12 @@ impl World {
         }
     }
 
+    /// p と light の間に遮蔽物があるか
+    ///
+    /// # Arguments
+    ///
+    /// * `p` - 位置
+    /// * `light` - ライト
     fn is_shadowed(&self, p: &Point3D, light: &Light) -> bool {
         let mut direction = light.position() - p;
         let distance = direction.magnitude();
