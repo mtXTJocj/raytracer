@@ -1,11 +1,11 @@
 use std::{cmp::PartialEq, ops::Mul};
 
-use super::{approx_eq, point3d::Point3D, ray::Ray, vector3d::Vector3D};
+use super::{approx_eq, point3d::Point3D, ray::Ray, vector3d::Vector3D, FLOAT};
 
 /// 4x4 行列を表す。
 #[derive(Debug)]
 pub struct Matrix4x4 {
-    m: [f32; 16],
+    m: [FLOAT; 16],
 }
 
 impl Matrix4x4 {
@@ -13,7 +13,7 @@ impl Matrix4x4 {
     ///
     /// # Argumets
     /// * `m` - row-major で各要素を格納した配列
-    pub fn new(m: [f32; 16]) -> Self {
+    pub fn new(m: [FLOAT; 16]) -> Self {
         Matrix4x4 { m }
     }
 
@@ -43,7 +43,7 @@ impl Matrix4x4 {
     /// # Argumets
     /// * `row` - 行 [0, 3]
     /// * `column` - 列 [0, 3]
-    pub fn at(&self, row: usize, column: usize) -> f32 {
+    pub fn at(&self, row: usize, column: usize) -> FLOAT {
         debug_assert!(row < 4 && column < 4);
 
         self.m[row * 4 + column]
@@ -66,11 +66,11 @@ impl Matrix4x4 {
         Matrix3x3::new(m)
     }
 
-    fn minor(&self, row: usize, column: usize) -> f32 {
+    fn minor(&self, row: usize, column: usize) -> FLOAT {
         self.submatrix(row, column).determinant()
     }
 
-    fn cofactor(&self, row: usize, column: usize) -> f32 {
+    fn cofactor(&self, row: usize, column: usize) -> FLOAT {
         let m = self.minor(row, column);
         if (row + column) & 0x1 == 0 {
             m
@@ -79,7 +79,7 @@ impl Matrix4x4 {
         }
     }
 
-    fn determinant(&self) -> f32 {
+    fn determinant(&self) -> FLOAT {
         (0..4).map(|i| self.m[i] * self.cofactor(0, i)).sum()
     }
 
@@ -206,15 +206,15 @@ impl Mul<&Ray> for &Matrix4x4 {
 
 #[derive(Debug)]
 struct Matrix3x3 {
-    m: [f32; 9],
+    m: [FLOAT; 9],
 }
 
 impl Matrix3x3 {
-    fn new(m: [f32; 9]) -> Self {
+    fn new(m: [FLOAT; 9]) -> Self {
         Matrix3x3 { m }
     }
 
-    fn at(&self, row: usize, column: usize) -> f32 {
+    fn at(&self, row: usize, column: usize) -> FLOAT {
         self.m[row * 3 + column]
     }
 
@@ -235,11 +235,11 @@ impl Matrix3x3 {
         Matrix2x2::new(m)
     }
 
-    fn minor(&self, row: usize, column: usize) -> f32 {
+    fn minor(&self, row: usize, column: usize) -> FLOAT {
         self.submatrix(row, column).determinant()
     }
 
-    fn cofactor(&self, row: usize, column: usize) -> f32 {
+    fn cofactor(&self, row: usize, column: usize) -> FLOAT {
         let m = self.minor(row, column);
         if (row + column) & 0x1 == 0 {
             m
@@ -248,7 +248,7 @@ impl Matrix3x3 {
         }
     }
 
-    fn determinant(&self) -> f32 {
+    fn determinant(&self) -> FLOAT {
         (0..3).map(|i| self.m[i] * self.cofactor(0, i)).sum()
     }
 }
@@ -257,15 +257,15 @@ impl Matrix3x3 {
 
 #[derive(Debug)]
 struct Matrix2x2 {
-    m: [f32; 4],
+    m: [FLOAT; 4],
 }
 
 impl Matrix2x2 {
-    fn new(m: [f32; 4]) -> Self {
+    fn new(m: [FLOAT; 4]) -> Self {
         Matrix2x2 { m }
     }
 
-    fn determinant(&self) -> f32 {
+    fn determinant(&self) -> FLOAT {
         self.m[0] * self.m[3] - self.m[1] * self.m[2]
     }
 }

@@ -1,13 +1,13 @@
-use super::{approx_eq, vector3d::Vector3D};
+use super::{approx_eq, vector3d::Vector3D, FLOAT};
 
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
 /// 3 次元空間内の 1 点 (x, y, z) を示す。
 #[derive(Debug, Clone)]
 pub struct Point3D {
-    pub x: f32,
-    pub y: f32,
-    pub z: f32,
+    pub x: FLOAT,
+    pub y: FLOAT,
+    pub z: FLOAT,
 }
 
 impl Point3D {
@@ -24,7 +24,7 @@ impl Point3D {
     /// * `x` - x
     /// * `y` - y
     /// * `z` - z
-    pub fn new(x: f32, y: f32, z: f32) -> Self {
+    pub fn new(x: FLOAT, y: FLOAT, z: FLOAT) -> Self {
         Point3D { x, y, z }
     }
 }
@@ -56,7 +56,7 @@ impl Add<&Vector3D> for &Point3D {
     }
 }
 
-impl Div<f32> for &Point3D {
+impl Div<FLOAT> for &Point3D {
     type Output = Point3D;
 
     /// self の各成分を 1/s 倍した Point3D を得る
@@ -65,12 +65,12 @@ impl Div<f32> for &Point3D {
     /// Argumets
     ///
     /// * `s` - スケール
-    fn div(self, s: f32) -> Self::Output {
+    fn div(self, s: FLOAT) -> Self::Output {
         Point3D::new(self.x / s, self.y / s, self.z / s)
     }
 }
 
-impl Mul<f32> for &Point3D {
+impl Mul<FLOAT> for &Point3D {
     type Output = Point3D;
 
     /// self の各成分を s 倍した Point3D を得る
@@ -78,7 +78,7 @@ impl Mul<f32> for &Point3D {
     /// Argumets
     ///
     /// * `s` - スケール
-    fn mul(self, s: f32) -> Self::Output {
+    fn mul(self, s: FLOAT) -> Self::Output {
         Point3D::new(self.x * s, self.y * s, self.z * s)
     }
 }

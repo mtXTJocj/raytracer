@@ -1,13 +1,13 @@
 use std::ops::{Add, Mul, Sub};
 
-use super::approx_eq;
+use super::{approx_eq, FLOAT};
 
 /// 色を RGB で表す
 #[derive(Debug, Clone, Copy)]
 pub struct Color {
-    pub red: f32,
-    pub green: f32,
-    pub blue: f32,
+    pub red: FLOAT,
+    pub green: FLOAT,
+    pub blue: FLOAT,
 }
 
 impl Color {
@@ -36,7 +36,7 @@ impl Color {
     /// * `red` - red
     /// * `green` - green
     /// * `blue` - blue
-    pub fn new(red: f32, green: f32, blue: f32) -> Self {
+    pub fn new(red: FLOAT, green: FLOAT, blue: FLOAT) -> Self {
         Color { red, green, blue }
     }
 }
@@ -89,20 +89,20 @@ impl Sub<&Color> for &Color {
     }
 }
 
-impl Mul<f32> for &Color {
+impl Mul<FLOAT> for &Color {
     type Output = Color;
 
     /// Color の各要素を other 倍する
     ///
     /// Argumets
     ///
-    /// * `other` - 乗算する f32
-    fn mul(self, other: f32) -> Self::Output {
+    /// * `other` - 乗算する FLOAT
+    fn mul(self, other: FLOAT) -> Self::Output {
         Color::new(self.red * other, self.green * other, self.blue * other)
     }
 }
 
-impl Mul<&Color> for f32 {
+impl Mul<&Color> for FLOAT {
     type Output = Color;
 
     fn mul(self, other: &Color) -> Self::Output {

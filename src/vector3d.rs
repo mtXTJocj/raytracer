@@ -1,12 +1,12 @@
-use super::{approx_eq, point3d::Point3D};
+use super::{approx_eq, point3d::Point3D, FLOAT};
 use std::ops::{Add, Div, DivAssign, Mul, Neg, Sub};
 
 /// 3 次元空間内のベクトル (x, y, z) を示す。
 #[derive(Debug, Clone)]
 pub struct Vector3D {
-    pub x: f32,
-    pub y: f32,
-    pub z: f32,
+    pub x: FLOAT,
+    pub y: FLOAT,
+    pub z: FLOAT,
 }
 
 impl Vector3D {
@@ -23,12 +23,12 @@ impl Vector3D {
     /// * `x` - x
     /// * `y` - y
     /// * `z` - z
-    pub fn new(x: f32, y: f32, z: f32) -> Self {
+    pub fn new(x: FLOAT, y: FLOAT, z: FLOAT) -> Self {
         Vector3D { x, y, z }
     }
 
     /// self のノルムを計算する
-    pub fn magnitude(&self) -> f32 {
+    pub fn magnitude(&self) -> FLOAT {
         (self.x * self.x + self.y * self.y + self.z * self.z).sqrt()
     }
 
@@ -44,7 +44,7 @@ impl Vector3D {
     ///
     /// # Argumets
     /// * `v` - Vector3D
-    pub fn dot(&self, v: &Vector3D) -> f32 {
+    pub fn dot(&self, v: &Vector3D) -> FLOAT {
         self.x * v.x + self.y * v.y + self.z * v.z
     }
 
@@ -132,7 +132,7 @@ impl Neg for &Vector3D {
     }
 }
 
-impl Mul<f32> for &Vector3D {
+impl Mul<FLOAT> for &Vector3D {
     type Output = Vector3D;
 
     /// self を s 倍する
@@ -140,12 +140,12 @@ impl Mul<f32> for &Vector3D {
     /// # Argumets
     ///
     /// * `s` - self にかけるスカラー値
-    fn mul(self, s: f32) -> Self::Output {
+    fn mul(self, s: FLOAT) -> Self::Output {
         Vector3D::new(self.x * s, self.y * s, self.z * s)
     }
 }
 
-impl Mul<&Vector3D> for f32 {
+impl Mul<&Vector3D> for FLOAT {
     type Output = Vector3D;
 
     /// v を self 倍する
@@ -158,7 +158,7 @@ impl Mul<&Vector3D> for f32 {
     }
 }
 
-impl Div<f32> for &Vector3D {
+impl Div<FLOAT> for &Vector3D {
     type Output = Vector3D;
 
     /// self を 1/s 倍する。
@@ -166,18 +166,18 @@ impl Div<f32> for &Vector3D {
     /// # Argumets
     ///
     /// * `s` - self を割るスカラー値
-    fn div(self, s: f32) -> Self::Output {
+    fn div(self, s: FLOAT) -> Self::Output {
         Vector3D::new(self.x / s, self.y / s, self.z / s)
     }
 }
 
-impl DivAssign<f32> for Vector3D {
+impl DivAssign<FLOAT> for Vector3D {
     /// self を 1/s 倍する。
     ///
     /// # Argumets
     ///
     /// * `s` - self を割るスカラー値
-    fn div_assign(&mut self, s: f32) {
+    fn div_assign(&mut self, s: FLOAT) {
         self.x /= s;
         self.y /= s;
         self.z /= s;
@@ -274,8 +274,14 @@ mod tests {
         assert_eq!(1.0, Vector3D::new(0.0, 1.0, 0.0).magnitude());
         assert_eq!(1.0, Vector3D::new(0.0, 0.0, 1.0).magnitude());
 
-        assert_eq!(14f32.sqrt(), Vector3D::new(1.0, 2.0, 3.0).magnitude());
-        assert_eq!(14f32.sqrt(), Vector3D::new(-1.0, -2.0, -3.0).magnitude());
+        assert!(approx_eq(
+            14f32.sqrt() as FLOAT,
+            Vector3D::new(1.0, 2.0, 3.0).magnitude()
+        ));
+        assert!(approx_eq(
+            14f32.sqrt() as FLOAT,
+            Vector3D::new(-1.0, -2.0, -3.0).magnitude()
+        ));
     }
 
     #[test]
@@ -284,7 +290,7 @@ mod tests {
         assert_eq!(Vector3D::new(1.0, 0.0, 0.0), *v.normalize());
 
         let mut v = Vector3D::new(1.0, 2.0, 3.0);
-        let m = 14f32.sqrt();
+        let m = 14f32.sqrt() as FLOAT;
         assert_eq!(Vector3D::new(1.0 / m, 2.0 / m, 3.0 / m), *v.normalize());
         assert!(approx_eq(1.0, v.magnitude()));
     }
@@ -318,7 +324,11 @@ mod tests {
     #[test]
     fn reflecting_a_vector_off_a_slanted_surface() {
         let v = Vector3D::new(0.0, -1.0, 0.0);
-        let n = Vector3D::new(2f32.sqrt() / 2.0, 2f32.sqrt() / 2.0, 0.0);
+        let n = Vector3D::new(
+            2f32.sqrt() as FLOAT / 2.0,
+            2f32.sqrt() as FLOAT / 2.0,
+            0.0,
+        );
         let r = v.reflect(&n);
 
         assert_eq!(Vector3D::new(1.0, 0.0, 0.0), r);

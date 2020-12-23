@@ -1,10 +1,10 @@
-use super::sphere::Sphere;
+use super::{sphere::Sphere, FLOAT};
 
 /// Ray とオブジェクトとの交点
 #[derive(Debug)]
 pub struct Intersection<'a> {
     /// 交差する Ray の始点からの距離
-    pub t: f32,
+    pub t: FLOAT,
     /// Ray と交差したオブジェクト
     pub object: &'a Sphere,
 }
@@ -17,7 +17,7 @@ pub struct Intersection<'a> {
 pub fn hit<'a, 'b>(
     xs: &'a Vec<Intersection<'b>>,
 ) -> Option<&'a Intersection<'b>> {
-    let mut min_t = std::f32::MAX;
+    let mut min_t = std::f32::MAX as FLOAT;
     let mut result = None;
 
     for x in xs {
@@ -31,7 +31,13 @@ pub fn hit<'a, 'b>(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::{
+        super::{
+            intersection_state::IntersectionState, point3d::Point3D, ray::Ray,
+            transform::Transform, vector3d::Vector3D, EPSILON,
+        },
+        *,
+    };
 
     #[test]
     fn an_intersection_encapsulates_t_and_object() {
@@ -119,5 +125,22 @@ mod tests {
         } else {
             assert!(false);
         }
+    }
+
+    #[test]
+    fn the_hit_should_offset_the_point() {
+        let r = Ray::new(
+            Point3D::new(0.0, 0.0, -5.0),
+            Vector3D::new(0.0, 0.0, 1.0),
+        );
+        let mut shape = Sphere::new();
+        *shape.transform_mut() = Transform::translation(0.0, 0.0, 1.0);
+        let i = Intersection {
+            t: 5.0,
+            object: &shape,
+        };
+
+        let comps = IntersectionState::new(&i, &r);
+        assert!(comps.over_point.z < EPSILON / 2.0);
     }
 }

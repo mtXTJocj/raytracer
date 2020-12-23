@@ -1,4 +1,4 @@
-use super::{point3d::Point3D, vector3d::Vector3D};
+use super::{point3d::Point3D, vector3d::Vector3D, FLOAT};
 
 /// Ray
 #[derive(Debug)]
@@ -33,7 +33,7 @@ impl Ray {
     ///
     /// # Argumets
     /// * `t` - direction 方向の距離を示すパラメータ
-    pub fn position(&self, t: f32) -> Point3D {
+    pub fn position(&self, t: FLOAT) -> Point3D {
         &self.origin + &(t * &self.direction)
     }
 }
