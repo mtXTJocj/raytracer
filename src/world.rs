@@ -5,6 +5,7 @@ use super::{
     light::Light,
     point3d::Point3D,
     ray::Ray,
+    shape::Shape,
     sphere::Sphere,
 };
 

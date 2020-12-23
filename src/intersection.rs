@@ -1,4 +1,4 @@
-use super::{sphere::Sphere, FLOAT};
+use super::{shape::Shape, sphere::Sphere, FLOAT};
 
 /// Ray とオブジェクトとの交点
 #[derive(Debug)]

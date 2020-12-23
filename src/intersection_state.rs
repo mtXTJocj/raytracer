@@ -1,6 +1,6 @@
 use super::{
-    intersection::Intersection, point3d::Point3D, ray::Ray, sphere::Sphere,
-    vector3d::Vector3D, EPSILON, FLOAT,
+    intersection::Intersection, point3d::Point3D, ray::Ray, shape::Shape,
+    sphere::Sphere, vector3d::Vector3D, EPSILON, FLOAT,
 };
 
 /// 交点における色の計算に必要な情報

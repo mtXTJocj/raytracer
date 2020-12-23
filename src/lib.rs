@@ -8,6 +8,7 @@ pub mod material;
 pub mod matrix4x4;
 pub mod point3d;
 pub mod ray;
+pub mod shape;
 pub mod sphere;
 pub mod transform;
 pub mod vector3d;
