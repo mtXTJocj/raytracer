@@ -148,8 +148,20 @@ mod tests {
         let xs = s.intersect(&r);
 
         assert_eq!(2, xs.len());
-        assert!(std::ptr::eq(xs[0].object, &s));
-        assert!(std::ptr::eq(xs[1].object, &s));
+        // &Shape 同士での比較だと、アドレスが同じでも std::ptr::eq() が false を
+        // 返す場合がある。
+        // trait object が作られる場所が異なるソースファイル内にあると
+        // 別々の vtable になることがあるため、false になるらしい。
+        // そのため、as *const _ as *const () で fat pointer を regular poiner に
+        // 強制的に変換して std::ptr::eq() でアドレスのみの比較する。
+        assert!(std::ptr::eq(
+            xs[0].object as *const _ as *const (),
+            &s as &dyn Shape as *const _ as *const (),
+        ));
+        assert!(std::ptr::eq(
+            xs[1].object as *const _ as *const (),
+            &s as &dyn Shape as *const _ as *const (),
+        ));
     }
 
     #[test]
