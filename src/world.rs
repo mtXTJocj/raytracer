@@ -98,8 +98,8 @@ impl World {
     /// * `r` - Ray
     pub fn color_at(&self, r: &Ray) -> Color {
         let xs = self.intersect(r);
-        if xs.len() > 0 {
-            let is = IntersectionState::new(&xs[0], r);
+        if let Some(ref nearest) = hit(&xs) {
+            let is = IntersectionState::new(nearest, r);
             self.shade_hit(&is)
         } else {
             Color::BLACK
@@ -201,7 +201,7 @@ mod tests {
         w.lights[0] = Light::new(Point3D::new(0.0, 0.25, 0.0), Color::WHITE);
         let r =
             Ray::new(Point3D::new(0.0, 0.0, 0.0), Vector3D::new(0.0, 0.0, 1.0));
-        let shape = &w.shapes[1];
+        let shape = w.shapes[1].as_ref();
         let i = Intersection {
             t: 0.5,
             object: shape,
