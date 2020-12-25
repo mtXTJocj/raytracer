@@ -2,8 +2,9 @@ use super::{
     intersection::Intersection, material::Material, point3d::Point3D, ray::Ray,
     transform::Transform, vector3d::Vector3D,
 };
+use std::fmt::Debug;
 
-pub trait Shape {
+pub trait Shape: Debug {
     /// self に対する変換を取得する
     fn transform(&self) -> &Transform;
     /// self に対する変換を取得する
@@ -50,6 +51,7 @@ pub trait Shape {
 mod tests {
     use super::{super::FLOAT, *};
 
+    #[derive(Debug)]
     struct TestShape {
         transformation: Transform,
         material: Material,

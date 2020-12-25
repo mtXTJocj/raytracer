@@ -1,15 +1,14 @@
 use super::{
     intersection::Intersection, point3d::Point3D, ray::Ray, shape::Shape,
-    sphere::Sphere, vector3d::Vector3D, EPSILON, FLOAT,
+    vector3d::Vector3D, EPSILON, FLOAT,
 };
 
 /// 交点における色の計算に必要な情報
-#[derive(Debug)]
 pub struct IntersectionState<'a> {
     /// Ray と object が交差する場所での t
     pub(crate) t: FLOAT,
     /// Ray と交差した object
-    pub(crate) object: &'a Sphere,
+    pub(crate) object: &'a dyn Shape,
     /// ワールド座標系における交差位置
     pub(crate) point: Point3D,
     /// self intersection を避けるため point に offset を加えたもの
@@ -57,7 +56,7 @@ impl<'a> IntersectionState<'a> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::{super::sphere::Sphere, *};
 
     #[test]
     fn precomputing_the_state_of_intersection() {
