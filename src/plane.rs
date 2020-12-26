@@ -12,6 +12,7 @@ pub struct Plane {
 }
 
 impl Plane {
+    /// 新規に Plane を作成する
     pub fn new() -> Self {
         Plane {
             transform: Transform::identity(),
