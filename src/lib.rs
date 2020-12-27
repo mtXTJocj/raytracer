@@ -11,6 +11,7 @@ pub mod point3d;
 pub mod ray;
 pub mod shape;
 pub mod sphere;
+pub mod stripe_pattern;
 pub mod transform;
 pub mod vector3d;
 pub mod world;
