@@ -1,10 +1,11 @@
 use raytracer::{
-    camera::Camera, color::Color, light::Light, point3d::Point3D,
-    sphere::Sphere, transform::Transform, vector3d::Vector3D, world::World,
-    FLOAT,
+    camera::Camera, color::Color, light::Light, plane::Plane, point3d::Point3D,
+    shape::Shape, sphere::Sphere, transform::Transform, vector3d::Vector3D,
+    world::World, FLOAT,
 };
 
 use std::{
+    boxed::Box,
     env,
     fs::File,
     io::{stdout, BufWriter, Write},
@@ -20,38 +21,35 @@ fn main() {
 
     let mut world = World::new();
 
-    let mut floor = Sphere::new();
-    *floor.transform_mut() = Transform::scaling(10.0, 0.01, 10.0);
+    let mut floor = Box::new(Plane::new());
     floor.material_mut().color = Color::new(1.0, 0.9, 0.9);
     floor.material_mut().specular = 0.0;
 
-    let mut wall = Sphere::new();
-    *wall.transform_mut() = &(&(&Transform::translation(0.0, 0.0, 5.0)
+    let mut wall = Box::new(Plane::new());
+    *wall.transform_mut() = &(&Transform::translation(0.0, 0.0, 5.0)
         * &Transform::rotation_y(-std::f32::consts::FRAC_PI_4 as FLOAT))
-        * &Transform::rotation_x(std::f32::consts::FRAC_PI_2 as FLOAT))
-        * &Transform::scaling(10.0, 0.01, 10.0);
+        * &Transform::rotation_x(std::f32::consts::FRAC_PI_2 as FLOAT);
     *wall.material_mut() = floor.material().clone();
 
-    let mut right_wall = Sphere::new();
-    *right_wall.transform_mut() = &(&(&Transform::translation(0.0, 0.0, 5.0)
+    let mut right_wall = Box::new(Plane::new());
+    *right_wall.transform_mut() = &(&Transform::translation(0.0, 0.0, 5.0)
         * &Transform::rotation_y(std::f32::consts::FRAC_PI_4 as FLOAT))
-        * &Transform::rotation_x(std::f32::consts::FRAC_PI_2 as FLOAT))
-        * &Transform::scaling(10.0, 0.01, 10.0);
+        * &Transform::rotation_x(std::f32::consts::FRAC_PI_2 as FLOAT);
     *right_wall.material_mut() = floor.material().clone();
 
-    let mut middle = Sphere::new();
+    let mut middle = Box::new(Sphere::new());
     *middle.transform_mut() = Transform::translation(-0.5, 1.0, 0.5);
     middle.material_mut().color = Color::new(0.1, 1.0, 0.5);
     middle.material_mut().diffuse = 0.7;
 
-    let mut right = Sphere::new();
+    let mut right = Box::new(Sphere::new());
     *right.transform_mut() = &Transform::translation(1.5, 0.5, -0.5)
         * &Transform::scaling(0.5, 0.5, 0.5);
     right.material_mut().color = Color::new(0.5, 1.0, 0.1);
     right.material_mut().diffuse = 0.7;
     right.material_mut().specular = 0.3;
 
-    let mut left = Sphere::new();
+    let mut left = Box::new(Sphere::new());
     *left.transform_mut() = &Transform::translation(-1.5, 0.33, -0.75)
         * &Transform::scaling(0.33, 0.33, 0.33);
     left.material_mut().color = Color::new(1.0, 0.8, 0.1);

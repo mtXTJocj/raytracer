@@ -1,4 +1,4 @@
-use super::{sphere::Sphere, FLOAT};
+use super::{shape::Shape, FLOAT};
 
 /// Ray とオブジェクトとの交点
 #[derive(Debug)]
@@ -6,7 +6,7 @@ pub struct Intersection<'a> {
     /// 交差する Ray の始点からの距離
     pub t: FLOAT,
     /// Ray と交差したオブジェクト
-    pub object: &'a Sphere,
+    pub object: &'a dyn Shape,
 }
 
 /// 複数の交点のうち、Ray の始点よりも先で最も手前にあるものを返す。
@@ -34,7 +34,7 @@ mod tests {
     use super::{
         super::{
             intersection_state::IntersectionState, point3d::Point3D, ray::Ray,
-            transform::Transform, vector3d::Vector3D, EPSILON,
+            sphere::Sphere, transform::Transform, vector3d::Vector3D, EPSILON,
         },
         *,
     };
@@ -45,7 +45,7 @@ mod tests {
         let i = Intersection { t: 3.5, object: &s };
 
         assert_eq!(3.5, i.t);
-        assert!(std::ptr::eq(&s, i.object));
+        assert!(std::ptr::eq(&s as &dyn Shape, i.object));
     }
 
     #[test]

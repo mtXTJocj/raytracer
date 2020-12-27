@@ -5,8 +5,9 @@ use super::{
     light::Light,
     point3d::Point3D,
     ray::Ray,
-    sphere::Sphere,
+    shape::Shape,
 };
+use std::boxed::Box;
 
 /// レンダリングに用いるライトとオブジェクトを集約する
 #[derive(Debug)]
@@ -14,7 +15,7 @@ pub struct World {
     /// ライト
     lights: Vec<Light>,
     /// オブジェクト
-    shapes: Vec<Sphere>,
+    shapes: Vec<Box<dyn Shape>>,
 }
 
 impl World {
@@ -40,8 +41,8 @@ impl World {
     /// # Arguments
     ///
     /// * `sphere` - 追加するオブジェクト
-    pub fn add_shape(&mut self, sphere: Sphere) {
-        self.shapes.push(sphere);
+    pub fn add_shape(&mut self, shape: Box<dyn Shape>) {
+        self.shapes.push(shape);
     }
 
     /// Ray とオブジェクトの交差判定を行い、交差情報のリストを返す。
@@ -97,8 +98,8 @@ impl World {
     /// * `r` - Ray
     pub fn color_at(&self, r: &Ray) -> Color {
         let xs = self.intersect(r);
-        if xs.len() > 0 {
-            let is = IntersectionState::new(&xs[0], r);
+        if let Some(ref nearest) = hit(&xs) {
+            let is = IntersectionState::new(nearest, r);
             self.shade_hit(&is)
         } else {
             Color::BLACK
@@ -132,7 +133,7 @@ mod tests {
     use super::{
         super::{
             approx_eq, camera::Camera, color::Color, material::Material,
-            transform::Transform, vector3d::Vector3D, FLOAT,
+            sphere::Sphere, transform::Transform, vector3d::Vector3D, FLOAT,
         },
         *,
     };
@@ -146,7 +147,7 @@ mod tests {
         );
         w.add_light(light);
 
-        let mut sphere = Sphere::new();
+        let mut sphere = Box::new(Sphere::new());
         let mut material = Material::new();
         material.color = Color::new(0.8, 1.0, 0.6);
         material.diffuse = 0.7;
@@ -154,7 +155,7 @@ mod tests {
         *sphere.material_mut() = material;
         w.add_shape(sphere);
 
-        let mut sphere = Sphere::new();
+        let mut sphere = Box::new(Sphere::new());
         *sphere.transform_mut() = Transform::scaling(0.5, 0.5, 0.5);
         w.add_shape(sphere);
         return w;
@@ -183,7 +184,7 @@ mod tests {
             Point3D::new(0.0, 0.0, -5.0),
             Vector3D::new(0.0, 0.0, 1.0),
         );
-        let shape = &w.shapes[0];
+        let shape = w.shapes[0].as_ref();
         let i = Intersection {
             t: 4.0,
             object: shape,
@@ -200,7 +201,7 @@ mod tests {
         w.lights[0] = Light::new(Point3D::new(0.0, 0.25, 0.0), Color::WHITE);
         let r =
             Ray::new(Point3D::new(0.0, 0.0, 0.0), Vector3D::new(0.0, 0.0, 1.0));
-        let shape = &w.shapes[1];
+        let shape = w.shapes[1].as_ref();
         let i = Intersection {
             t: 0.5,
             object: shape,
@@ -223,7 +224,7 @@ mod tests {
         );
         w.add_light(l);
 
-        let shape = &w.shapes[0];
+        let shape = w.shapes[0].as_ref();
         let i = Intersection {
             t: 4.0,
             object: shape,
@@ -266,7 +267,7 @@ mod tests {
             Vector3D::new(0.0, 0.0, -1.0),
         );
         let c = w.color_at(&r);
-        assert_eq!(w.shapes[0].material().color, c);
+        assert_eq!(w.shapes[1].material().color, c);
     }
 
     #[test]
@@ -319,9 +320,9 @@ mod tests {
         let mut w = World::new();
         let light = Light::new(Point3D::new(0.0, 0.0, -10.0), Color::WHITE);
         w.add_light(light);
-        let s1 = Sphere::new();
+        let s1 = Box::new(Sphere::new());
         w.add_shape(s1);
-        let mut s2 = Sphere::new();
+        let mut s2 = Box::new(Sphere::new());
         *s2.transform_mut() = Transform::translation(0.0, 0.0, 10.0);
         w.add_shape(s2);
 
@@ -329,7 +330,7 @@ mod tests {
             Ray::new(Point3D::new(0.0, 0.0, 5.0), Vector3D::new(0.0, 0.0, 1.0));
         let i = Intersection {
             t: 4.0,
-            object: &w.shapes[1],
+            object: w.shapes[1].as_ref(),
         };
         let comps = IntersectionState::new(&i, &r);
         let c = w.shade_hit(&comps);

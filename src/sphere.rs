@@ -1,6 +1,6 @@
 use super::{
     intersection::Intersection, material::Material, point3d::Point3D, ray::Ray,
-    transform::Transform, vector3d::Vector3D,
+    shape::Shape, transform::Transform, vector3d::Vector3D,
 };
 
 /// 原点を中心とする半径 1 の単位球
@@ -19,34 +19,26 @@ impl Sphere {
             material: Material::new(),
         }
     }
+}
 
-    /// self に対する変換を取得する
-    pub fn transform(&self) -> &Transform {
+impl Shape for Sphere {
+    fn transform(&self) -> &Transform {
         &self.transform
     }
 
-    /// self に対する変換を取得する
-    pub fn transform_mut(&mut self) -> &mut Transform {
+    fn transform_mut(&mut self) -> &mut Transform {
         &mut self.transform
     }
 
-    pub fn material(&self) -> &Material {
+    fn material(&self) -> &Material {
         &self.material
     }
 
-    pub fn material_mut(&mut self) -> &mut Material {
+    fn material_mut(&mut self) -> &mut Material {
         &mut self.material
     }
 
-    /// ray と self の交点を求める。全ての交点を Vec に入れて返す。
-    /// 交点がない場合には空の Vec を返す。
-    ///
-    /// # Argumets
-    /// * `ray` - 交点の計算対象となる Ray
-    ///
-    /// # Returns
-    pub fn intersect(&self, ray: &Ray) -> Vec<Intersection> {
-        let r = self.transform.inv() * ray;
+    fn local_intersect(&self, r: &Ray) -> Vec<Intersection> {
         let o = r.origin();
         let d = r.direction();
         let sphere_to_ray = o - &Point3D::ZERO;
@@ -76,15 +68,8 @@ impl Sphere {
         ];
     }
 
-    /// self 上の点 p における法線ベクトルを取得する。
-    ///
-    /// # Argumets
-    /// * `p` - self 上の点
-    pub fn normal_at(&self, p: &Point3D) -> Vector3D {
-        let p_in_local = self.transform.inv() * p;
-        let n = Vector3D::new(p_in_local.x, p_in_local.y, p_in_local.z);
-
-        self.transform.apply_to_normal(&n)
+    fn local_normal_at(&self, p: &Point3D) -> Vector3D {
+        Vector3D::new(p.x, p.y, p.z)
     }
 }
 
@@ -163,8 +148,20 @@ mod tests {
         let xs = s.intersect(&r);
 
         assert_eq!(2, xs.len());
-        assert!(std::ptr::eq(xs[0].object, &s));
-        assert!(std::ptr::eq(xs[1].object, &s));
+        // &Shape 同士での比較だと、アドレスが同じでも std::ptr::eq() が false を
+        // 返す場合がある。
+        // trait object が作られる場所が異なるソースファイル内にあると
+        // 別々の vtable になることがあるため、false になるらしい。
+        // そのため、as *const _ as *const () で fat pointer を regular poiner に
+        // 強制的に変換して std::ptr::eq() でアドレスのみの比較する。
+        assert!(std::ptr::eq(
+            xs[0].object as *const _ as *const (),
+            &s as &dyn Shape as *const _ as *const (),
+        ));
+        assert!(std::ptr::eq(
+            xs[1].object as *const _ as *const (),
+            &s as &dyn Shape as *const _ as *const (),
+        ));
     }
 
     #[test]
