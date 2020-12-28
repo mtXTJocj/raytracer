@@ -11,6 +11,7 @@ pub mod pattern;
 pub mod plane;
 pub mod point3d;
 pub mod ray;
+pub mod ring_pattern;
 pub mod shape;
 pub mod sphere;
 pub mod stripe_pattern;
