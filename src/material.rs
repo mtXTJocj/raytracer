@@ -1,5 +1,6 @@
 use super::{
-    color::Color, light::Light, point3d::Point3D, vector3d::Vector3D, FLOAT,
+    color::Color, light::Light, point3d::Point3D,
+    stripe_pattern::StripePattern, vector3d::Vector3D, FLOAT,
 };
 
 /// マテリアル
@@ -15,6 +16,7 @@ pub struct Material {
     pub specular: FLOAT,
     /// 鏡面反射光の広がり。大きい程、狭く強い。
     pub shininess: FLOAT,
+    pattern: Option<StripePattern>,
 }
 
 impl Material {
@@ -26,7 +28,16 @@ impl Material {
             diffuse: 0.9,
             specular: 0.9,
             shininess: 200.0,
+            pattern: None,
         }
+    }
+
+    pub fn pattern(&self) -> &Option<StripePattern> {
+        &self.pattern
+    }
+
+    pub fn pattern_mut(&mut self) -> &mut Option<StripePattern> {
+        &mut self.pattern
     }
 
     /// ライティングの計算を行う。
@@ -46,7 +57,12 @@ impl Material {
         normalv: &Vector3D,
         in_shadow: bool,
     ) -> Color {
-        let effective_color = &self.color * light.intensity();
+        let color = match self.pattern {
+            Some(ref pattern) => pattern.stripe_at(&point),
+            None => self.color,
+        };
+
+        let effective_color = &color * light.intensity();
         let mut lightv = light.position() - point;
         lightv.normalize();
         let ambient = &effective_color * self.ambient;
@@ -169,5 +185,35 @@ mod tests {
 
         let result = m.lighting(&light, &p, &eyev, &normalv, in_shadow);
         assert_eq!(Color::new(0.1, 0.1, 0.1), result);
+    }
+
+    #[test]
+    fn lighting_with_a_pattern_applied() {
+        let mut m = Material::new();
+        *m.pattern_mut() = Some(StripePattern::new(Color::WHITE, Color::BLACK));
+        m.ambient = 1.0;
+        m.diffuse = 0.0;
+        m.specular = 0.0;
+        let eyev = Vector3D::new(0.0, 0.0, -1.0);
+        let normalv = Vector3D::new(0.0, 0.0, -1.0);
+        let light = Light::new(Point3D::new(0.0, 0.0, -10.0), Color::WHITE);
+
+        let c1 = m.lighting(
+            &light,
+            &Point3D::new(0.9, 0.0, 0.0),
+            &eyev,
+            &normalv,
+            false,
+        );
+        let c2 = m.lighting(
+            &light,
+            &Point3D::new(1.1, 0.0, 0.0),
+            &eyev,
+            &normalv,
+            false,
+        );
+
+        assert_eq!(Color::WHITE, c1);
+        assert_eq!(Color::BLACK, c2);
     }
 }
