@@ -1,6 +1,5 @@
 use super::{
-    color::Color, pattern::Pattern, point3d::Point3D, shape::Shape,
-    transform::Transform,
+    color::Color, pattern::Pattern, point3d::Point3D, transform::Transform,
 };
 
 #[derive(Debug)]
@@ -43,7 +42,7 @@ impl Pattern for StripePattern {
 #[cfg(test)]
 mod tests {
     use super::{
-        super::{sphere::Sphere, transform::Transform},
+        super::{shape::Shape, sphere::Sphere, transform::Transform},
         *,
     };
 
