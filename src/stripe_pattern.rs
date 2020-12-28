@@ -1,14 +1,30 @@
-use super::{color::Color, point3d::Point3D, shape::Shape};
+use super::{
+    color::Color, point3d::Point3D, shape::Shape, transform::Transform,
+};
 
 #[derive(Debug)]
 pub struct StripePattern {
     a: Color,
     b: Color,
+    /// Pattern -> Shape Transform
+    transform: Transform,
 }
 
 impl StripePattern {
     pub fn new(a: Color, b: Color) -> Self {
-        StripePattern { a, b }
+        StripePattern {
+            a,
+            b,
+            transform: Transform::identity(),
+        }
+    }
+
+    pub fn transform(&self) -> &Transform {
+        &self.transform
+    }
+
+    pub fn transform_mut(&mut self) -> &mut Transform {
+        &mut self.transform
     }
 
     pub fn stripe_at(&self, p: &Point3D) -> Color {
@@ -22,7 +38,8 @@ impl StripePattern {
 
     pub fn stripe_at_object(&self, shape: &dyn Shape, p: &Point3D) -> Color {
         let local_p = shape.transform().inv() * p;
-        self.stripe_at(&local_p)
+        let pattern_p = self.transform.inv() * &local_p;
+        self.stripe_at(&pattern_p)
     }
 }
 
@@ -113,6 +130,27 @@ mod tests {
         *object.transform_mut() = Transform::scaling(2.0, 2.0, 2.0);
         let pattern = StripePattern::new(Color::WHITE, Color::BLACK);
         let c = pattern.stripe_at_object(&object, &Point3D::new(1.5, 0.0, 0.0));
+
+        assert_eq!(Color::WHITE, c);
+    }
+
+    #[test]
+    fn stripes_with_a_pattern_transformation() {
+        let object = Sphere::new();
+        let mut pattern = StripePattern::new(Color::WHITE, Color::BLACK);
+        *pattern.transform_mut() = Transform::scaling(2.0, 2.0, 2.0);
+        let c = pattern.stripe_at_object(&object, &Point3D::new(1.5, 0.0, 0.0));
+
+        assert_eq!(Color::WHITE, c);
+    }
+
+    #[test]
+    fn stripes_with_both_an_object_and_a_pattern_transformation() {
+        let mut object = Sphere::new();
+        *object.transform_mut() = Transform::scaling(2.0, 2.0, 2.0);
+        let mut pattern = StripePattern::new(Color::WHITE, Color::BLACK);
+        *pattern.transform_mut() = Transform::translation(0.5, 0.0, 0.0);
+        let c = pattern.stripe_at_object(&object, &Point3D::new(2.5, 0.0, 0.0));
 
         assert_eq!(Color::WHITE, c);
     }
