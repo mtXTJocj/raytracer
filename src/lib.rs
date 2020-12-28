@@ -1,5 +1,6 @@
 pub mod camera;
 pub mod canvas;
+pub mod checkers_pattern;
 pub mod color;
 pub mod gradient_pattern;
 pub mod intersection;
