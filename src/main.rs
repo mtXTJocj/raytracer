@@ -29,13 +29,15 @@ fn main() {
     *wall.transform_mut() = &(&Transform::translation(0.0, 0.0, 5.0)
         * &Transform::rotation_y(-std::f32::consts::FRAC_PI_4 as FLOAT))
         * &Transform::rotation_x(std::f32::consts::FRAC_PI_2 as FLOAT);
-    *wall.material_mut() = floor.material().clone();
+    wall.material_mut().color = Color::new(1.0, 0.9, 0.9);
+    wall.material_mut().specular = 0.0;
 
     let mut right_wall = Box::new(Plane::new());
     *right_wall.transform_mut() = &(&Transform::translation(0.0, 0.0, 5.0)
         * &Transform::rotation_y(std::f32::consts::FRAC_PI_4 as FLOAT))
         * &Transform::rotation_x(std::f32::consts::FRAC_PI_2 as FLOAT);
-    *right_wall.material_mut() = floor.material().clone();
+    right_wall.material_mut().color = Color::new(1.0, 0.9, 0.9);
+    right_wall.material_mut().specular = 0.0;
 
     let mut middle = Box::new(Sphere::new());
     *middle.transform_mut() = Transform::translation(-0.5, 1.0, 0.5);

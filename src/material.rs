@@ -3,7 +3,7 @@ use super::{
 };
 
 /// マテリアル
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug)]
 pub struct Material {
     /// 色
     pub color: Color,
