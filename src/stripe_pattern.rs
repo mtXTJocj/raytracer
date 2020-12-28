@@ -1,4 +1,4 @@
-use super::{color::Color, point3d::Point3D};
+use super::{color::Color, point3d::Point3D, shape::Shape};
 
 #[derive(Debug)]
 pub struct StripePattern {
@@ -19,11 +19,19 @@ impl StripePattern {
             self.b
         }
     }
+
+    pub fn stripe_at_object(&self, shape: &dyn Shape, p: &Point3D) -> Color {
+        let local_p = shape.transform().inv() * p;
+        self.stripe_at(&local_p)
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::{
+        super::{sphere::Sphere, transform::Transform},
+        *,
+    };
 
     #[test]
     fn creating_a_stripe_pattern() {
@@ -97,5 +105,15 @@ mod tests {
             Color::WHITE,
             pattern.stripe_at(&Point3D::new(-1.1, 0.0, 0.0))
         );
+    }
+
+    #[test]
+    fn stripes_with_an_object_transformation() {
+        let mut object = Sphere::new();
+        *object.transform_mut() = Transform::scaling(2.0, 2.0, 2.0);
+        let pattern = StripePattern::new(Color::WHITE, Color::BLACK);
+        let c = pattern.stripe_at_object(&object, &Point3D::new(1.5, 0.0, 0.0));
+
+        assert_eq!(Color::WHITE, c);
     }
 }
