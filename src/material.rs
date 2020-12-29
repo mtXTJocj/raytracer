@@ -16,6 +16,7 @@ pub struct Material {
     pub specular: FLOAT,
     /// 鏡面反射光の広がり。大きい程、狭く強い。
     pub shininess: FLOAT,
+    /// パターン。None の場合は使用しない。
     pattern: Option<Box<dyn Pattern>>,
 }
 
@@ -32,10 +33,12 @@ impl Material {
         }
     }
 
+    /// パターンを取得する
     pub fn pattern(&self) -> &Option<Box<dyn Pattern>> {
         &self.pattern
     }
 
+    /// パターンを取得する
     pub fn pattern_mut(&mut self) -> &mut Option<Box<dyn Pattern>> {
         &mut self.pattern
     }

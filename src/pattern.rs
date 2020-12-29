@@ -4,10 +4,20 @@ use super::{
 use std::fmt::Debug;
 
 pub trait Pattern: Debug {
+    /// self に対する変換を取得する
     fn transform(&self) -> &Transform;
+    /// self に対する変換を取得する
     fn transform_mut(&mut self) -> &mut Transform;
 
+    /// 点 p におけるパターンの色を返す。
+    ///
+    /// # Argumets
+    /// * `p` - pattern 座標系における点
     fn pattern_at(&self, p: &Point3D) -> Color;
+    /// World 上の点 p におけるパターンの色を返す。
+    ///
+    /// # Argumets
+    /// * `p` - World 座標系における点
     fn pattern_at_shape(&self, shape: &dyn Shape, p: &Point3D) -> Color {
         let local_p = shape.transform().inv() * p;
         let pattern_p = self.transform().inv() * &local_p;

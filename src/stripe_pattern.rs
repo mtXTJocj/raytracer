@@ -2,6 +2,7 @@ use super::{
     color::Color, pattern::Pattern, point3d::Point3D, transform::Transform,
 };
 
+/// x 軸方向に変化する縞模様のパターン
 #[derive(Debug)]
 pub struct StripePattern {
     a: Color,

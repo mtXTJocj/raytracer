@@ -2,6 +2,7 @@ use super::{
     color::Color, pattern::Pattern, point3d::Point3D, transform::Transform,
 };
 
+/// 3 次元空間内の市松模様
 #[derive(Debug)]
 pub struct CheckersPattern {
     a: Color,

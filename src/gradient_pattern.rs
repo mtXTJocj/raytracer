@@ -2,6 +2,7 @@ use super::{
     color::Color, pattern::Pattern, point3d::Point3D, transform::Transform,
 };
 
+/// x 軸方向に変化するグラデーションパターン
 #[derive(Debug)]
 pub struct GradientPattern {
     a: Color,

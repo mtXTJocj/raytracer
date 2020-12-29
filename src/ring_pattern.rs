@@ -2,6 +2,7 @@ use super::{
     color::Color, pattern::Pattern, point3d::Point3D, transform::Transform,
 };
 
+/// xz 平面上の同心円パターン
 #[derive(Debug)]
 pub struct RingPattern {
     a: Color,
