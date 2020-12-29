@@ -81,6 +81,7 @@ impl World {
                 self.is_shadowed(&intersection_state.over_point, light);
             c = &c
                 + &intersection_state.object.material().lighting(
+                    intersection_state.object,
                     light,
                     &intersection_state.over_point,
                     &intersection_state.eyev,

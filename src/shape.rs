@@ -49,7 +49,10 @@ pub trait Shape: Debug {
 
 #[cfg(test)]
 mod tests {
-    use super::{super::FLOAT, *};
+    use super::{
+        super::{color::Color, FLOAT},
+        *,
+    };
 
     #[derive(Debug)]
     struct TestShape {
@@ -123,7 +126,11 @@ mod tests {
     fn the_default_material() {
         let shape = test_shape();
 
-        assert_eq!(*shape.material(), Material::new());
+        assert_eq!(Color::WHITE, shape.material().color);
+        assert_eq!(0.1, shape.material().ambient);
+        assert_eq!(0.9, shape.material().diffuse);
+        assert_eq!(0.9, shape.material().specular);
+        assert_eq!(200.0, shape.material().shininess);
     }
 
     #[test]
@@ -131,10 +138,9 @@ mod tests {
         let mut shape = test_shape();
         let mut m = Material::new();
         m.ambient = 1.0;
-        let m2 = m.clone();
 
         *shape.material_mut() = m;
-        assert_eq!(*shape.material(), m2);
+        assert_eq!(1.0, shape.material().ambient);
     }
 
     #[test]
