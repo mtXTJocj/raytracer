@@ -16,6 +16,7 @@ pub struct Material {
     pub specular: FLOAT,
     /// 鏡面反射光の広がり。大きい程、狭く強い。
     pub shininess: FLOAT,
+    pub reflective: FLOAT,
     /// パターン。None の場合は使用しない。
     pattern: Option<Box<dyn Pattern>>,
 }
@@ -29,6 +30,7 @@ impl Material {
             diffuse: 0.9,
             specular: 0.9,
             shininess: 200.0,
+            reflective: 0.0,
             pattern: None,
         }
     }
@@ -233,5 +235,12 @@ mod tests {
 
         assert_eq!(Color::WHITE, c1);
         assert_eq!(Color::BLACK, c2);
+    }
+
+    #[test]
+    fn reflectivity_for_the_default_material() {
+        let m = Material::new();
+
+        assert_eq!(0.0, m.reflective);
     }
 }

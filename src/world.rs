@@ -74,12 +74,16 @@ impl World {
     /// # Arguments
     ///
     /// * `intersection_state` - 計算に必要な交点情報
-    fn shade_hit(&self, intersection_state: &IntersectionState) -> Color {
-        let mut c = Color::new(0.0, 0.0, 0.0);
+    fn shade_hit(
+        &self,
+        intersection_state: &IntersectionState,
+        remaining: usize,
+    ) -> Color {
+        let mut surface = Color::new(0.0, 0.0, 0.0);
         for light in &self.lights {
             let is_shadowed =
                 self.is_shadowed(&intersection_state.over_point, light);
-            c = &c
+            surface = &surface
                 + &intersection_state.object.material().lighting(
                     intersection_state.object,
                     light,
@@ -89,7 +93,8 @@ impl World {
                     is_shadowed,
                 );
         }
-        c
+        let reflected = self.reflected_color(&intersection_state, remaining);
+        &surface + &reflected
     }
 
     /// Ray に対応する色を返す。ヒットしなかった場合、黒を返す
@@ -97,11 +102,11 @@ impl World {
     /// # Arguments
     ///
     /// * `r` - Ray
-    pub fn color_at(&self, r: &Ray) -> Color {
+    pub fn color_at(&self, r: &Ray, remaining: usize) -> Color {
         let xs = self.intersect(r);
         if let Some(ref nearest) = hit(&xs) {
             let is = IntersectionState::new(nearest, r);
-            self.shade_hit(&is)
+            self.shade_hit(&is, remaining)
         } else {
             Color::BLACK
         }
@@ -127,6 +132,24 @@ impl World {
         }
         false
     }
+
+    fn reflected_color(
+        &self,
+        is: &IntersectionState,
+        remaining: usize,
+    ) -> Color {
+        if is.object.material().reflective == 0.0 {
+            return Color::BLACK;
+        }
+        if remaining <= 0 {
+            return Color::BLACK;
+        }
+
+        let reflect_ray = Ray::new(is.over_point.clone(), is.reflectv.clone());
+        let color = self.color_at(&reflect_ray, remaining - 1);
+
+        &color * is.object.material().reflective
+    }
 }
 
 #[cfg(test)]
@@ -134,7 +157,8 @@ mod tests {
     use super::{
         super::{
             approx_eq, camera::Camera, color::Color, material::Material,
-            sphere::Sphere, transform::Transform, vector3d::Vector3D, FLOAT,
+            plane::Plane, sphere::Sphere, transform::Transform,
+            vector3d::Vector3D, FLOAT,
         },
         *,
     };
@@ -192,7 +216,7 @@ mod tests {
         };
         let comps = IntersectionState::new(&i, &r);
 
-        let c = w.shade_hit(&comps);
+        let c = w.shade_hit(&comps, 1);
         assert_eq!(Color::new(0.38066, 0.47583, 0.2855), c);
     }
 
@@ -208,7 +232,7 @@ mod tests {
             object: shape,
         };
         let comps = IntersectionState::new(&i, &r);
-        let c = w.shade_hit(&comps);
+        let c = w.shade_hit(&comps, 1);
         assert_eq!(Color::new(0.90498, 0.90498, 0.90498), c);
     }
 
@@ -232,7 +256,7 @@ mod tests {
         };
         let comps = IntersectionState::new(&i, &r);
 
-        let c = w.shade_hit(&comps);
+        let c = w.shade_hit(&comps, 1);
         assert_eq!(Color::new(0.76132, 0.95166, 0.5710), c);
     }
 
@@ -243,7 +267,7 @@ mod tests {
             Point3D::new(0.0, 0.0, -5.0),
             Vector3D::new(0.0, 1.0, 0.0),
         );
-        let c = w.color_at(&r);
+        let c = w.color_at(&r, 1);
         assert_eq!(Color::BLACK, c);
     }
 
@@ -254,7 +278,7 @@ mod tests {
             Point3D::new(0.0, 0.0, -5.0),
             Vector3D::new(0.0, 0.0, 1.0),
         );
-        let c = w.color_at(&r);
+        let c = w.color_at(&r, 1);
         assert_eq!(Color::new(0.38066, 0.47583, 0.2855), c);
     }
 
@@ -267,7 +291,7 @@ mod tests {
             Point3D::new(0.0, 0.0, 0.75),
             Vector3D::new(0.0, 0.0, -1.0),
         );
-        let c = w.color_at(&r);
+        let c = w.color_at(&r, 1);
         assert_eq!(w.shapes[1].material().color, c);
     }
 
@@ -334,8 +358,121 @@ mod tests {
             object: w.shapes[1].as_ref(),
         };
         let comps = IntersectionState::new(&i, &r);
-        let c = w.shade_hit(&comps);
+        let c = w.shade_hit(&comps, 1);
 
         assert_eq!(Color::new(0.1, 0.1, 0.1), c);
+    }
+
+    #[test]
+    fn the_reflected_color_for_a_non_reflective_material() {
+        let mut w = default_world();
+        let r =
+            Ray::new(Point3D::new(0.0, 0.0, 0.0), Vector3D::new(0.0, 0.0, 1.0));
+        w.shapes[1].material_mut().ambient = 1.0;
+        let i = Intersection {
+            t: 1.0,
+            object: w.shapes[1].as_ref(),
+        };
+        let comps = IntersectionState::new(&i, &r);
+        let color = w.reflected_color(&comps, 1);
+
+        assert_eq!(Color::BLACK, color);
+    }
+
+    #[test]
+    fn the_reflected_color_for_a_reflective_material() {
+        let mut w = default_world();
+        let mut shape = Plane::new();
+        shape.material_mut().reflective = 0.5;
+        *shape.transform_mut() = Transform::translation(0.0, -1.0, 0.0);
+        w.add_shape(Box::new(shape));
+        let r = Ray::new(
+            Point3D::new(0.0, 0.0, -3.0),
+            Vector3D::new(
+                0.0,
+                -2f32.sqrt() as FLOAT / 2.0,
+                2f32.sqrt() as FLOAT / 2.0,
+            ),
+        );
+        let i = Intersection {
+            t: 2f32.sqrt() as FLOAT,
+            object: w.shapes[2].as_ref(),
+        };
+        let comps = IntersectionState::new(&i, &r);
+        let color = w.reflected_color(&comps, 1);
+
+        assert_eq!(Color::new(0.19033, 0.23791, 0.14274), color);
+    }
+
+    #[test]
+    fn shade_hit_with_a_reflective_material() {
+        let mut w = default_world();
+        let mut shape = Plane::new();
+        shape.material_mut().reflective = 0.5;
+        *shape.transform_mut() = Transform::translation(0.0, -1.0, 0.0);
+        w.add_shape(Box::new(shape));
+        let r = Ray::new(
+            Point3D::new(0.0, 0.0, -3.0),
+            Vector3D::new(
+                0.0,
+                -2f32.sqrt() as FLOAT / 2.0,
+                2f32.sqrt() as FLOAT / 2.0,
+            ),
+        );
+        let i = Intersection {
+            t: 2f32.sqrt() as FLOAT,
+            object: w.shapes[2].as_ref(),
+        };
+        let comps = IntersectionState::new(&i, &r);
+        let color = w.shade_hit(&comps, 1);
+
+        assert_eq!(Color::new(0.87676, 0.92434, 0.82918), color);
+    }
+
+    #[test]
+    fn color_at_with_mutually_reflective_surfaces() {
+        let mut w = World::new();
+        w.add_light(Light::new(Point3D::new(0.0, 0.0, 0.0), Color::WHITE));
+
+        let mut lower = Plane::new();
+        lower.material_mut().reflective = 1.0;
+        *lower.transform_mut() = Transform::translation(0.0, -1.0, 0.0);
+        w.add_shape(Box::new(lower));
+
+        let mut upper = Plane::new();
+        upper.material_mut().reflective = 1.0;
+        *upper.transform_mut() = Transform::translation(0.0, 1.0, 0.0);
+        w.add_shape(Box::new(upper));
+
+        let r =
+            Ray::new(Point3D::new(0.0, 0.0, 0.0), Vector3D::new(0.0, 1.0, 0.0));
+
+        let _ = w.color_at(&r, 1);
+    }
+
+    #[test]
+    fn the_reflected_color_at_the_maximum_recursive_depth() {
+        let mut w = default_world();
+        let mut shape = Plane::new();
+        shape.material_mut().reflective = 0.5;
+        *shape.transform_mut() = Transform::translation(0.0, -1.0, 0.0);
+
+        w.add_shape(Box::new(shape));
+        let r = Ray::new(
+            Point3D::new(0.0, 0.0, -3.0),
+            Vector3D::new(
+                0.0,
+                -2f32.sqrt() as FLOAT / 2.0,
+                2f32.sqrt() as FLOAT / 2.0,
+            ),
+        );
+        let i = Intersection {
+            t: 2f32.sqrt() as FLOAT,
+            object: w.shapes[2].as_ref(),
+        };
+        let comps = IntersectionState::new(&i, &r);
+        let color = w.reflected_color(&comps, 0);
+
+        assert_eq!(Color::BLACK, color);
     }
 }

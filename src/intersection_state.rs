@@ -17,6 +17,7 @@ pub struct IntersectionState<'a> {
     pub(crate) eyev: Vector3D,
     /// ワールド座標系における法線ベクトル
     pub(crate) normalv: Vector3D,
+    pub(crate) reflectv: Vector3D,
     /// Ray の起点が object 内部であるか
     pub(crate) inside: bool,
 }
@@ -41,6 +42,7 @@ impl<'a> IntersectionState<'a> {
             false
         };
         let over_point = &point + &(&normalv * EPSILON);
+        let reflectv = r.direction().reflect(&normalv);
 
         IntersectionState {
             t,
@@ -49,6 +51,7 @@ impl<'a> IntersectionState<'a> {
             over_point,
             eyev,
             normalv,
+            reflectv,
             inside,
         }
     }
@@ -56,7 +59,10 @@ impl<'a> IntersectionState<'a> {
 
 #[cfg(test)]
 mod tests {
-    use super::{super::sphere::Sphere, *};
+    use super::{
+        super::{plane::Plane, sphere::Sphere},
+        *,
+    };
 
     #[test]
     fn precomputing_the_state_of_intersection() {
@@ -108,5 +114,32 @@ mod tests {
         assert_eq!(Vector3D::new(0.0, 0.0, -1.0), comps.eyev);
         assert_eq!(true, comps.inside);
         assert_eq!(Vector3D::new(0.0, 0.0, -1.0), comps.normalv);
+    }
+
+    #[test]
+    fn precomputing_the_reflection_vector() {
+        let shape = Plane::new();
+        let r = Ray::new(
+            Point3D::new(0.0, 1.0, -1.0),
+            Vector3D::new(
+                0.0,
+                -2f32.sqrt() as FLOAT / 2.0,
+                2f32.sqrt() as FLOAT / 2.0,
+            ),
+        );
+        let i = Intersection {
+            t: 2f32.sqrt() as FLOAT,
+            object: &shape,
+        };
+        let comps = IntersectionState::new(&i, &r);
+
+        assert_eq!(
+            Vector3D::new(
+                0.0,
+                2f32.sqrt() as FLOAT / 2.0,
+                2f32.sqrt() as FLOAT / 2.0,
+            ),
+            comps.reflectv
+        );
     }
 }
