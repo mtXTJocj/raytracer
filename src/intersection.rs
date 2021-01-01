@@ -140,7 +140,7 @@ mod tests {
             object: &shape,
         };
 
-        let comps = IntersectionState::new(&i, &r);
+        let comps = IntersectionState::new(&i, &r, &vec![]);
         assert!(comps.over_point.z < EPSILON / 2.0);
     }
 }
