@@ -98,12 +98,33 @@ impl<'a> IntersectionState<'a> {
             inside,
         }
     }
+
+    pub(crate) fn schlick(&self) -> FLOAT {
+        let mut cos = self.eyev.dot(&self.normalv);
+        // total internal reflection can only occur if n1 > n2
+        if self.n1 > self.n2 {
+            let n = self.n1 / self.n2;
+            let sin2_t = n * n * (1.0 - cos * cos);
+            if sin2_t > 1.0 {
+                return 1.0;
+            }
+
+            cos = (1.0 - sin2_t).sqrt()
+        }
+
+        let r0 = (self.n1 - self.n2) / (self.n1 + self.n2);
+        let r0 = r0 * r0;
+
+        r0 + (1.0 - r0) * (1.0 - cos).powi(5)
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::{
-        super::{plane::Plane, sphere::Sphere, transform::Transform},
+        super::{
+            approx_eq, plane::Plane, sphere::Sphere, transform::Transform,
+        },
         *,
     };
 
@@ -275,5 +296,65 @@ mod tests {
         let comps = IntersectionState::new(&xs[0], &r, &xs);
         assert!(comps.under_point.z > EPSILON / 2.0);
         assert!(comps.point.z < comps.under_point.z);
+    }
+
+    #[test]
+    fn the_schlick_approximation_under_total_internal_reflection() {
+        let shape = glass_sphere();
+        let r = Ray::new(
+            Point3D::new(0.0, 0.0, 2f32.sqrt() as FLOAT / 2.0),
+            Vector3D::new(0.0, 1.0, 0.0),
+        );
+        let xs = vec![
+            Intersection {
+                t: -2f32.sqrt() as FLOAT / 2.0,
+                object: &shape,
+            },
+            Intersection {
+                t: 2f32.sqrt() as FLOAT / 2.0,
+                object: &shape,
+            },
+        ];
+        let comps = IntersectionState::new(&xs[1], &r, &xs);
+        let reflectance = comps.schlick();
+        assert_eq!(1.0, reflectance);
+    }
+
+    #[test]
+    fn the_schlick_approximation_with_a_perpendicular_viewing_angle() {
+        let shape = glass_sphere();
+        let r =
+            Ray::new(Point3D::new(0.0, 0.0, 0.0), Vector3D::new(0.0, 1.0, 0.0));
+        let xs = vec![
+            Intersection {
+                t: -1.0,
+                object: &shape,
+            },
+            Intersection {
+                t: 1.0,
+                object: &shape,
+            },
+        ];
+        let comps = IntersectionState::new(&xs[1], &r, &xs);
+        let reflectance = comps.schlick();
+
+        assert!(approx_eq(0.04, reflectance));
+    }
+
+    #[test]
+    fn the_schlick_approximation_with_small_angle_and_n2_gt_n1() {
+        let shape = glass_sphere();
+        let r = Ray::new(
+            Point3D::new(0.0, 0.99, -2.0),
+            Vector3D::new(0.0, 0.0, 1.0),
+        );
+        let xs = vec![Intersection {
+            t: 1.8589,
+            object: &shape,
+        }];
+        let comps = IntersectionState::new(&xs[0], &r, &xs);
+        let reflectance = comps.schlick();
+
+        assert!(approx_eq(0.48873, reflectance));
     }
 }

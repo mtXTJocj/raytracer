@@ -36,10 +36,10 @@ fn main() {
         * &Transform::rotation_x(std::f32::consts::FRAC_PI_2 as FLOAT);
     wall.material_mut().color = Color::new(1.0, 0.9, 0.9);
     wall.material_mut().specular = 0.0;
+    wall.material_mut().reflective = 0.8;
     let mut pattern = Box::new(StripePattern::new(Color::WHITE, Color::RED));
     *pattern.transform_mut() =
         Transform::rotation_y(std::f32::consts::FRAC_PI_4 as FLOAT);
-    *wall.material_mut().pattern_mut() = Some(pattern);
 
     let mut right_wall = Box::new(Plane::new());
     *right_wall.transform_mut() = &(&Transform::translation(0.0, 0.0, 5.0)

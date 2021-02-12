@@ -95,7 +95,16 @@ impl World {
         }
         let reflected = self.reflected_color(&intersection_state, remaining);
         let refracted = self.refracted_color(&intersection_state, remaining);
-        &(&surface + &reflected) + &refracted
+
+        if intersection_state.object.material().reflective > 0.0
+            && intersection_state.object.material().transparency > 0.0
+        {
+            let reflectance = intersection_state.schlick();
+            &(&surface + &(&reflected * reflectance))
+                + &(&refracted * (1.0 - reflectance))
+        } else {
+            &(&surface + &reflected) + &refracted
+        }
     }
 
     /// Ray に対応する色を返す。ヒットしなかった場合、黒を返す
@@ -106,7 +115,7 @@ impl World {
     pub fn color_at(&self, r: &Ray, remaining: usize) -> Color {
         let xs = self.intersect(r);
         if let Some(ref nearest) = hit(&xs) {
-            let is = IntersectionState::new(nearest, r, &vec![]);
+            let is = IntersectionState::new(nearest, r, &xs);
             self.shade_hit(&is, remaining)
         } else {
             Color::BLACK
@@ -671,5 +680,40 @@ mod tests {
         let color = w.shade_hit(&comps, 5);
 
         assert_eq!(Color::new(0.93642, 0.68642, 0.68642), color);
+    }
+
+    #[test]
+    fn shade_hit_with_a_reflective_transparent_material() {
+        let mut w = default_world();
+        let r = Ray::new(
+            Point3D::new(0.0, 0.0, -3.0),
+            Vector3D::new(
+                0.0,
+                -2f32.sqrt() as FLOAT / 2.0,
+                2f32.sqrt() as FLOAT / 2.0,
+            ),
+        );
+
+        let mut floor = Plane::new();
+        *floor.transform_mut() = Transform::translation(0.0, -1.0, 0.0);
+        floor.material_mut().reflective = 0.5;
+        floor.material_mut().transparency = 0.5;
+        floor.material_mut().refractive_index = 1.5;
+        w.add_shape(Box::new(floor));
+
+        let mut ball = Sphere::new();
+        ball.material_mut().color = Color::new(1.0, 0.0, 0.0);
+        ball.material_mut().ambient = 0.5;
+        *ball.transform_mut() = Transform::translation(0.0, -3.5, -0.5);
+        w.add_shape(Box::new(ball));
+
+        let xs = vec![Intersection {
+            t: 2f32.sqrt() as FLOAT,
+            object: w.shapes[2].as_ref(),
+        }];
+        let comps = IntersectionState::new(&xs[0], &r, &xs);
+        let color = w.shade_hit(&comps, 5);
+
+        assert_eq!(Color::new(0.93391, 0.69643, 0.69243), color);
     }
 }
