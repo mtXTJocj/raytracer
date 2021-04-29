@@ -40,10 +40,7 @@ impl Pattern for GradientPattern {
 
 #[cfg(test)]
 mod tests {
-    use super::{
-        super::{sphere::Sphere, transform::Transform},
-        *,
-    };
+    use super::*;
 
     #[test]
     fn a_gradient_linearly_interpolates_between_colors() {

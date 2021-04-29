@@ -97,7 +97,7 @@ impl Camera {
         for y in 0..self.vsize {
             for x in 0..self.hsize {
                 let ray = self.ray_for_pixel(x, y);
-                let color = w.color_at(&ray);
+                let color = w.color_at(&ray, 5);
                 *image.color_at_mut(x, y) = color;
             }
         }
