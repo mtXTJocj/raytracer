@@ -16,8 +16,11 @@ pub struct Material {
     pub specular: FLOAT,
     /// 鏡面反射光の広がり。大きい程、狭く強い。
     pub shininess: FLOAT,
+    /// 反射率(0.0 で反射なし、1.0 で完全反射)
     pub reflective: FLOAT,
+    /// 透明度(0.0 で不透明、1.0 で完全透明)
     pub transparency: FLOAT,
+    /// 屈折率
     pub refractive_index: FLOAT,
     /// パターン。None の場合は使用しない。
     pattern: Option<Box<dyn Pattern>>,

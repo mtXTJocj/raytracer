@@ -12,14 +12,20 @@ pub struct IntersectionState<'a> {
     /// ワールド座標系における交差位置
     pub(crate) point: Point3D,
     /// self intersection を避けるため point に offset を加えたもの
+    /// Shape から出ていく場合用
     pub(crate) over_point: Point3D,
+    /// self intersection を避けるため point に offset を加えたもの
+    /// Shape 内へ入っていく場合用
     pub(crate) under_point: Point3D,
     /// ワールド座標系における視線ベクトル
     pub(crate) eyev: Vector3D,
     /// ワールド座標系における法線ベクトル
     pub(crate) normalv: Vector3D,
+    /// 反射方向のベクトル
     pub(crate) reflectv: Vector3D,
+    /// 出射する Shape の屈折率
     pub(crate) n1: FLOAT,
+    /// 入射する Shape の屈折率
     pub(crate) n2: FLOAT,
     /// Ray の起点が object 内部であるか
     pub(crate) inside: bool,
@@ -30,8 +36,9 @@ impl<'a> IntersectionState<'a> {
     ///
     /// # Arguments
     ///
-    /// * `i` - 交点
-    /// * `r` - Ray
+    /// * `i`  - 交点
+    /// * `r`  - Ray
+    /// * `xs` - r に関する全ての交点
     pub(crate) fn new(
         hit: &'a Intersection,
         r: &Ray,
@@ -99,6 +106,7 @@ impl<'a> IntersectionState<'a> {
         }
     }
 
+    /// 反射と屈折の割合を計算する
     pub(crate) fn schlick(&self) -> FLOAT {
         let mut cos = self.eyev.dot(&self.normalv);
         // total internal reflection can only occur if n1 > n2

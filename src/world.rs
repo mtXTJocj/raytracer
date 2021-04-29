@@ -74,6 +74,7 @@ impl World {
     /// # Arguments
     ///
     /// * `intersection_state` - 計算に必要な交点情報
+    /// * `remaining` - 再帰の最大深さまでの残り回数
     fn shade_hit(
         &self,
         intersection_state: &IntersectionState,
@@ -112,6 +113,7 @@ impl World {
     /// # Arguments
     ///
     /// * `r` - Ray
+    /// * `remaining` - 再帰の最大深さまでの残り回数
     pub fn color_at(&self, r: &Ray, remaining: usize) -> Color {
         let xs = self.intersect(r);
         if let Some(ref nearest) = hit(&xs) {
@@ -143,12 +145,19 @@ impl World {
         false
     }
 
+    /// 反射成分の色を計算する。
+    ///
+    /// # Arguments
+    ///
+    /// * `is` - 反射する点の情報
+    /// * `remaining` - 再帰の最大深さまでの残り回数
     fn reflected_color(
         &self,
         is: &IntersectionState,
         remaining: usize,
     ) -> Color {
         if is.object.material().reflective == 0.0 {
+            // 光を全く反射しない場合
             return Color::BLACK;
         }
         if remaining <= 0 {
@@ -161,12 +170,19 @@ impl World {
         &color * is.object.material().reflective
     }
 
+    /// 屈折成分の色を計算する。
+    ///
+    /// # Arguments
+    ///
+    /// * `is` - 屈折する点の情報
+    /// * `remaining` - 再帰の最大深さまでの残り回数
     fn refracted_color(
         &self,
         is: &IntersectionState,
         remaining: usize,
     ) -> Color {
         if is.object.material().transparency == 0.0 {
+            // 不透明な場合
             return Color::BLACK;
         }
         if remaining <= 0 {
@@ -177,6 +193,7 @@ impl World {
         let cos_i = is.eyev.dot(&is.normalv);
         let sin2_t = n_ratio * n_ratio * (1.0 - cos_i * cos_i);
         if sin2_t > 1.0 {
+            // total internal reflection
             return Color::BLACK;
         }
 
