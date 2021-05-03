@@ -14,6 +14,7 @@ pub struct Cube {
 
 impl Cube {
     /// 新規に Cube を作成する
+    /// Cube は中心を原点とする Axis-Aligned Box で、各軸 1, -1 に面が存在する
     pub fn new() -> Self {
         Cube {
             transform: Transform::identity(),
@@ -40,6 +41,11 @@ impl Shape for Cube {
     }
 
     fn local_intersect(&self, r: &Ray) -> Vec<Intersection> {
+        /// Ray の各軸の面との交点となる t を求める。
+        ///
+        /// # Argumets
+        /// * `origin` - Ray の開始点
+        /// * `direction` - Ray の方向
         fn check_axis(origin: FLOAT, direction: FLOAT) -> (FLOAT, FLOAT) {
             // -1 の面
             let tmin_numerator = -1.0 - origin;
