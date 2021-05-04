@@ -2,6 +2,7 @@ pub mod camera;
 pub mod canvas;
 pub mod checkers_pattern;
 pub mod color;
+pub mod cone;
 pub mod cube;
 pub mod cylinder;
 pub mod gradient_pattern;
