@@ -1,10 +1,8 @@
 use raytracer::{
     camera::Camera, checkers_pattern::CheckersPattern, color::Color,
-    cube::Cube, gradient_pattern::GradientPattern, light::Light,
-    pattern::Pattern, plane::Plane, point3d::Point3D,
-    ring_pattern::RingPattern, shape::Shape, sphere::Sphere,
-    stripe_pattern::StripePattern, transform::Transform, vector3d::Vector3D,
-    world::World, FLOAT,
+    cone::Cone, cube::Cube, cylinder::Cylinder, light::Light, pattern::Pattern,
+    plane::Plane, point3d::Point3D, shape::Shape, sphere::Sphere,
+    transform::Transform, vector3d::Vector3D, world::World, FLOAT,
 };
 
 use std::{
@@ -32,30 +30,42 @@ fn main() {
     *pattern.transform_mut() = Transform::scaling(0.8, 0.8, 0.8);
     *floor.material_mut().pattern_mut() = Some(pattern);
 
-    let mut outer = Box::new(Cube::new());
-    *outer.transform_mut() = &Transform::translation(0.0, 1.0, 0.5)
-        * &Transform::scaling(1.0, 1.0, 1.0);
-    outer.material_mut().color = Color::new(0.1, 0.7, 0.7);
-    outer.material_mut().reflective = 1.0;
-    outer.material_mut().transparency = 0.7;
-    outer.material_mut().refractive_index = 0.9;
+    let mut cyl0 = Box::new(Cylinder::new());
+    *cyl0.minimum_mut() = -1.0;
+    *cyl0.maximum_mut() = 1.0;
+    *cyl0.closed_mut() = true;
+    *cyl0.transform_mut() = &(&(&Transform::translation(-1.0, 1.0, 0.5)
+        * &Transform::rotation_y(std::f32::consts::FRAC_PI_4 as FLOAT))
+        * &Transform::rotation_x(std::f32::consts::FRAC_PI_4 as FLOAT))
+        * &Transform::scaling(0.5, 1.0, 0.5);
+    cyl0.material_mut().color = Color::new(0.1, 0.7, 0.7);
+    cyl0.material_mut().reflective = 1.0;
+    cyl0.material_mut().transparency = 0.7;
+    cyl0.material_mut().refractive_index = 0.9;
 
-    let mut inner = Box::new(Sphere::new());
-    *inner.transform_mut() = Transform::translation(0.0, 1.0, 0.5);
-    inner.material_mut().reflective = 1.0;
-    inner.material_mut().transparency = 1.0;
-    inner.material_mut().refractive_index = 0.85;
+    let mut cone0 = Box::new(Cone::new());
+    *cone0.minimum_mut() = -1.2;
+    *cone0.maximum_mut() = 0.4;
+    *cone0.closed_mut() = true;
+    *cone0.transform_mut() = &(&(&Transform::translation(1.0, 1.0, 0.5)
+        * &Transform::rotation_y(std::f32::consts::FRAC_PI_4 as FLOAT))
+        * &Transform::rotation_x(std::f32::consts::FRAC_PI_4 as FLOAT))
+        * &Transform::scaling(0.5, 1.0, 0.5);
+    cone0.material_mut().color = Color::new(0.7, 0.1, 0.7);
+    cone0.material_mut().reflective = 1.0;
+    cone0.material_mut().transparency = 0.7;
+    cone0.material_mut().refractive_index = 0.9;
 
     world.add_shape(floor);
-    world.add_shape(outer);
-    world.add_shape(inner);
+    world.add_shape(cyl0);
+    world.add_shape(cone0);
     world.add_light(Light::new(
         Point3D::new(-10.0, 10.0, -10.0),
         Color::new(1.0, 1.0, 1.0),
     ));
 
     let mut camera =
-        Camera::new(300, 150, std::f32::consts::FRAC_PI_3 as FLOAT);
+        Camera::new(600, 300, std::f32::consts::FRAC_PI_3 as FLOAT);
     *camera.transform_mut() = Transform::view_transform(
         &Point3D::new(0.0, 1.5, -5.0),
         &Point3D::new(0.0, 1.0, 0.0),
