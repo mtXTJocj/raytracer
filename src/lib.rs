@@ -3,6 +3,7 @@ pub mod canvas;
 pub mod checkers_pattern;
 pub mod color;
 pub mod cube;
+pub mod cylinder;
 pub mod gradient_pattern;
 pub mod intersection;
 pub mod intersection_state;
