@@ -11,6 +11,7 @@ pub mod intersection_state;
 pub mod light;
 pub mod material;
 pub mod matrix4x4;
+pub mod node;
 pub mod pattern;
 pub mod plane;
 pub mod point3d;
