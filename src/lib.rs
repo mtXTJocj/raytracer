@@ -6,6 +6,7 @@ pub mod cone;
 pub mod cube;
 pub mod cylinder;
 pub mod gradient_pattern;
+pub mod group;
 pub mod intersection;
 pub mod intersection_state;
 pub mod light;

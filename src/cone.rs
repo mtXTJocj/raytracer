@@ -1,14 +1,12 @@
 use crate::{
-    approx_eq, intersection::Intersection, material::Material,
-    point3d::Point3D, ray::Ray, shape::Shape, transform::Transform,
-    vector3d::Vector3D, EPSILON, FLOAT, INFINITY,
+    approx_eq, intersection::Intersection, material::Material, node::Node,
+    point3d::Point3D, ray::Ray, shape::Shape, vector3d::Vector3D, EPSILON,
+    FLOAT, INFINITY,
 };
 
 /// Axis Aligned な cube
 #[derive(Debug)]
 pub struct Cone {
-    /// Cone に対して適用する変換
-    transform: Transform,
     material: Material,
     ///
     minimum: FLOAT,
@@ -22,7 +20,6 @@ impl Cone {
     /// 新規に Cone を作成する
     pub fn new() -> Self {
         Cone {
-            transform: Transform::identity(),
             material: Material::new(),
             minimum: -INFINITY,
             maximum: INFINITY,
@@ -54,7 +51,12 @@ impl Cone {
         &mut self.closed
     }
 
-    fn intersect_caps<'a>(&'a self, r: &Ray, xs: &mut Vec<Intersection<'a>>) {
+    fn intersect_caps<'a>(
+        &'a self,
+        r: &Ray,
+        n: &'a Node,
+        xs: &mut Vec<Intersection<'a>>,
+    ) {
         fn check_cap(r: &Ray, t: FLOAT) -> bool {
             let x = r.origin().x + t * r.direction().x;
             let y = r.origin().y + t * r.direction().y;
@@ -73,27 +75,19 @@ impl Cone {
         // by intersecting the ray with the plane at y = cyl.minimum
         let t = (self.minimum() - r.origin().y) / r.direction().y;
         if check_cap(&r, t) {
-            xs.push(Intersection { t: t, object: self });
+            xs.push(Intersection { t: t, object: n });
         }
 
         // check for an intersection with the upper end cap
         // by intersecting the ray with the plane at y = cyl.maximum
         let t = (self.maximum() - r.origin().y) / r.direction().y;
         if check_cap(&r, t) {
-            xs.push(Intersection { t: t, object: self });
+            xs.push(Intersection { t: t, object: n });
         }
     }
 }
 
 impl Shape for Cone {
-    fn transform(&self) -> &Transform {
-        &self.transform
-    }
-
-    fn transform_mut(&mut self) -> &mut Transform {
-        &mut self.transform
-    }
-
     fn material(&self) -> &Material {
         &self.material
     }
@@ -102,7 +96,11 @@ impl Shape for Cone {
         &mut self.material
     }
 
-    fn local_intersect(&self, r: &Ray) -> Vec<Intersection> {
+    fn local_intersect<'a>(
+        &'a self,
+        r: &Ray,
+        n: &'a Node,
+    ) -> Vec<Intersection<'a>> {
         let d = r.direction();
         let o = r.origin();
 
@@ -113,7 +111,7 @@ impl Shape for Cone {
         if approx_eq(0.0, a) {
             if !approx_eq(0.0, b) {
                 let t = -c / (2.0 * b);
-                xs.push(Intersection { t: t, object: self });
+                xs.push(Intersection { t: t, object: n });
             }
         } else {
             let disc = b * b - 4.0 * a * c;
@@ -126,22 +124,16 @@ impl Shape for Cone {
 
                 let y0 = o.y + t0 * d.y;
                 if self.minimum() < y0 && y0 < self.maximum() {
-                    xs.push(Intersection {
-                        t: t0,
-                        object: self,
-                    });
+                    xs.push(Intersection { t: t0, object: n });
                 }
                 let y1 = o.y + t1 * d.y;
                 if self.minimum() < y1 && y1 < self.maximum() {
-                    xs.push(Intersection {
-                        t: t1,
-                        object: self,
-                    });
+                    xs.push(Intersection { t: t1, object: n });
                 }
             }
         }
 
-        self.intersect_caps(&r, &mut xs);
+        self.intersect_caps(&r, n, &mut xs);
         xs
     }
 
@@ -168,11 +160,13 @@ mod tests {
 
     #[test]
     fn intersecting_a_cone_with_a_ray() {
+        let dummy_node = Node::new(Box::new(Cone::new()));
+
         let shape = Cone::new();
         let mut direction = Vector3D::new(0.0, 0.0, 1.0);
         direction.normalize();
         let r = Ray::new(Point3D::new(0.0, 0.0, -5.0), direction);
-        let xs = shape.local_intersect(&r);
+        let xs = shape.local_intersect(&r, &dummy_node);
         assert_eq!(2, xs.len());
         assert!(approx_eq(5.0, xs[0].t));
         assert!(approx_eq(5.0, xs[1].t));
@@ -180,7 +174,7 @@ mod tests {
         let mut direction = Vector3D::new(1.0, 1.0, 1.0);
         direction.normalize();
         let r = Ray::new(Point3D::new(0.0, 0.0, -5.0), direction);
-        let xs = shape.local_intersect(&r);
+        let xs = shape.local_intersect(&r, &dummy_node);
         assert_eq!(2, xs.len());
         assert!(approx_eq(8.66025, xs[0].t));
         assert!(approx_eq(8.66025, xs[1].t));
@@ -188,7 +182,7 @@ mod tests {
         let mut direction = Vector3D::new(-0.5, -1.0, 1.0);
         direction.normalize();
         let r = Ray::new(Point3D::new(1.0, 1.0, -5.0), direction);
-        let xs = shape.local_intersect(&r);
+        let xs = shape.local_intersect(&r, &dummy_node);
         assert_eq!(2, xs.len());
         assert!(approx_eq(4.55006, xs[0].t));
         assert!(approx_eq(49.44994, xs[1].t));
@@ -196,17 +190,21 @@ mod tests {
 
     #[test]
     fn intersecting_a_cone_with_a_ray_parallel_to_one_of_its_halves() {
-        let shape = Cone::new();
+        let dummy_node = Node::new(Box::new(Cone::new()));
+
+        let shape = Box::new(Cone::new());
         let mut direction = Vector3D::new(0.0, 1.0, 1.0);
         direction.normalize();
         let r = Ray::new(Point3D::new(0.0, 0.0, -1.0), direction);
-        let xs = shape.local_intersect(&r);
+        let xs = shape.local_intersect(&r, &dummy_node);
         assert_eq!(1, xs.len());
         assert!(approx_eq(0.35355, xs[0].t));
     }
 
     #[test]
     fn intersecting_a_cones_end_caps() {
+        let dummy_node = Node::new(Box::new(Cone::new()));
+
         let mut shape = Cone::new();
         *shape.minimum_mut() = -0.5;
         *shape.maximum_mut() = 0.5;
@@ -215,19 +213,19 @@ mod tests {
         let mut direction = Vector3D::new(0.0, 1.0, 0.0);
         direction.normalize();
         let r = Ray::new(Point3D::new(0.0, 0.0, -5.0), direction);
-        let xs = shape.local_intersect(&r);
+        let xs = shape.local_intersect(&r, &dummy_node);
         assert_eq!(0, xs.len());
 
         let mut direction = Vector3D::new(0.0, 1.0, 1.0);
         direction.normalize();
         let r = Ray::new(Point3D::new(0.0, 0.0, -0.25), direction);
-        let xs = shape.local_intersect(&r);
+        let xs = shape.local_intersect(&r, &dummy_node);
         assert_eq!(2, xs.len());
 
         let mut direction = Vector3D::new(0.0, 1.0, 0.0);
         direction.normalize();
         let r = Ray::new(Point3D::new(0.0, 0.0, -0.25), direction);
-        let xs = shape.local_intersect(&r);
+        let xs = shape.local_intersect(&r, &dummy_node);
         assert_eq!(4, xs.len());
     }
 

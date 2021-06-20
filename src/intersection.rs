@@ -1,4 +1,4 @@
-use super::{shape::Shape, FLOAT};
+use super::{node::Node, FLOAT};
 
 /// Ray とオブジェクトとの交点
 #[derive(Debug)]
@@ -6,7 +6,7 @@ pub struct Intersection<'a> {
     /// 交差する Ray の始点からの距離
     pub t: FLOAT,
     /// Ray と交差したオブジェクト
-    pub object: &'a dyn Shape,
+    pub object: &'a Node,
 }
 
 /// 複数の交点のうち、Ray の始点よりも先で最も手前にあるものを返す。
@@ -41,16 +41,16 @@ mod tests {
 
     #[test]
     fn an_intersection_encapsulates_t_and_object() {
-        let s = Sphere::new();
+        let s = Node::new(Box::new(Sphere::new()));
         let i = Intersection { t: 3.5, object: &s };
 
         assert_eq!(3.5, i.t);
-        assert!(std::ptr::eq(&s as &dyn Shape, i.object));
+        assert!(std::ptr::eq(&s as &Node, i.object));
     }
 
     #[test]
     fn aggregating_intersections() {
-        let s = Sphere::new();
+        let s = Node::new(Box::new(Sphere::new()));
         let i1 = Intersection { t: 1.0, object: &s };
         let i2 = Intersection { t: 2.0, object: &s };
         let xs = vec![i1, i2];
@@ -62,7 +62,7 @@ mod tests {
 
     #[test]
     fn the_hit_when_all_intersections_have_positive_t() {
-        let s = Sphere::new();
+        let s = Node::new(Box::new(Sphere::new()));
         let i1 = Intersection { t: 1.0, object: &s };
         let i2 = Intersection { t: 2.0, object: &s };
         let xs = vec![i2, i1];
@@ -76,7 +76,7 @@ mod tests {
 
     #[test]
     fn the_hit_when_some_intersections_have_negative_t() {
-        let s = Sphere::new();
+        let s = Node::new(Box::new(Sphere::new()));
         let i1 = Intersection {
             t: -1.0,
             object: &s,
@@ -93,7 +93,7 @@ mod tests {
 
     #[test]
     fn the_hit_when_all_intersections_have_negative_t() {
-        let s = Sphere::new();
+        let s = Node::new(Box::new(Sphere::new()));
         let i1 = Intersection {
             t: -2.0,
             object: &s,
@@ -110,7 +110,7 @@ mod tests {
 
     #[test]
     fn the_hit_is_always_the_lowest_nonnegative_intersection() {
-        let s = Sphere::new();
+        let s = Node::new(Box::new(Sphere::new()));
         let i1 = Intersection { t: 5.0, object: &s };
         let i2 = Intersection { t: 7.0, object: &s };
         let i3 = Intersection {
@@ -133,11 +133,11 @@ mod tests {
             Point3D::new(0.0, 0.0, -5.0),
             Vector3D::new(0.0, 0.0, 1.0),
         );
-        let mut shape = Sphere::new();
-        *shape.transform_mut() = Transform::translation(0.0, 0.0, 1.0);
+        let mut node = Node::new(Box::new(Sphere::new()));
+        node.set_transform(Transform::translation(0.0, 0.0, 1.0));
         let i = Intersection {
             t: 5.0,
-            object: &shape,
+            object: &node,
         };
 
         let comps = IntersectionState::new(&i, &r, &vec![]);

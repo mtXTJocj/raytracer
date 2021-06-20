@@ -1,5 +1,5 @@
 use super::{
-    intersection::Intersection, point3d::Point3D, ray::Ray, shape::Shape,
+    intersection::Intersection, node::Node, point3d::Point3D, ray::Ray,
     vector3d::Vector3D, EPSILON, FLOAT,
 };
 
@@ -8,7 +8,7 @@ pub struct IntersectionState<'a> {
     /// Ray と object が交差する場所での t
     pub(crate) t: FLOAT,
     /// Ray と交差した object
-    pub(crate) object: &'a dyn Shape,
+    pub(crate) object: &'a Node,
     /// ワールド座標系における交差位置
     pub(crate) point: Point3D,
     /// self intersection を避けるため point に offset を加えたもの
@@ -59,7 +59,7 @@ impl<'a> IntersectionState<'a> {
         let under_point = &point - &(&normalv * EPSILON);
         let reflectv = r.direction().reflect(&normalv);
 
-        let mut containers: Vec<&dyn Shape> = Vec::with_capacity(xs.len());
+        let mut containers: Vec<&Node> = Vec::with_capacity(xs.len());
         let mut n1 = 1.0;
         let mut n2 = 1.0;
         for i in xs {
@@ -131,7 +131,8 @@ impl<'a> IntersectionState<'a> {
 mod tests {
     use super::{
         super::{
-            approx_eq, plane::Plane, sphere::Sphere, transform::Transform,
+            approx_eq, plane::Plane, shape::Shape, sphere::Sphere,
+            transform::Transform,
         },
         *,
     };
@@ -150,10 +151,10 @@ mod tests {
             Point3D::new(0.0, 0.0, -5.0),
             Vector3D::new(0.0, 0.0, 1.0),
         );
-        let shape = Sphere::new();
+        let node = Node::new(Box::new(Sphere::new()));
         let i = Intersection {
             t: 4.0,
-            object: &shape,
+            object: &node,
         };
 
         let comps = IntersectionState::new(&i, &r, &vec![]);
@@ -169,10 +170,10 @@ mod tests {
             Point3D::new(0.0, 0.0, -5.0),
             Vector3D::new(0.0, 0.0, 1.0),
         );
-        let shape = Sphere::new();
+        let node = Node::new(Box::new(Sphere::new()));
         let i = Intersection {
             t: 4.0,
-            object: &shape,
+            object: &node,
         };
 
         let comps = IntersectionState::new(&i, &r, &vec![]);
@@ -183,10 +184,10 @@ mod tests {
     fn the_hit_when_an_intersection_occurs_on_the_inside() {
         let r =
             Ray::new(Point3D::new(0.0, 0.0, 0.0), Vector3D::new(0.0, 0.0, 1.0));
-        let shape = Sphere::new();
+        let node = Node::new(Box::new(Sphere::new()));
         let i = Intersection {
             t: 1.0,
-            object: &shape,
+            object: &node,
         };
 
         let comps = IntersectionState::new(&i, &r, &vec![]);
@@ -198,7 +199,7 @@ mod tests {
 
     #[test]
     fn precomputing_the_reflection_vector() {
-        let shape = Plane::new();
+        let node = Node::new(Box::new(Plane::new()));
         let r = Ray::new(
             Point3D::new(0.0, 1.0, -1.0),
             Vector3D::new(
@@ -209,7 +210,7 @@ mod tests {
         );
         let i = Intersection {
             t: 2f32.sqrt() as FLOAT,
-            object: &shape,
+            object: &node,
         };
         let comps = IntersectionState::new(&i, &r, &vec![]);
 
@@ -226,16 +227,19 @@ mod tests {
     #[test]
     fn finding_n1_and_n2_at_various_intersections() {
         let mut a = glass_sphere();
-        *a.transform_mut() = Transform::scaling(2.0, 2.0, 2.0);
         a.material_mut().refractive_index = 1.5;
+        let mut a = Node::new(Box::new(a));
+        a.set_transform(Transform::scaling(2.0, 2.0, 2.0));
 
         let mut b = glass_sphere();
-        *b.transform_mut() = Transform::translation(0.0, 0.0, -0.25);
         b.material_mut().refractive_index = 2.0;
+        let mut b = Node::new(Box::new(b));
+        b.set_transform(Transform::translation(0.0, 0.0, -0.25));
 
         let mut c = glass_sphere();
-        *c.transform_mut() = Transform::translation(0.0, 0.0, 0.25);
         c.material_mut().refractive_index = 2.5;
+        let mut c = Node::new(Box::new(c));
+        c.set_transform(Transform::translation(0.0, 0.0, 0.25));
 
         let r = Ray::new(
             Point3D::new(0.0, 0.0, -4.0),
@@ -293,11 +297,11 @@ mod tests {
             Point3D::new(0.0, 0.0, -5.0),
             Vector3D::new(0.0, 0.0, 1.0),
         );
-        let mut shape = glass_sphere();
-        *shape.transform_mut() = Transform::translation(0.0, 0.0, 1.0);
+        let mut node = Node::new(Box::new(glass_sphere()));
+        node.set_transform(Transform::translation(0.0, 0.0, 1.0));
         let i = Intersection {
             t: 5.0,
-            object: &shape,
+            object: &node,
         };
         let xs = vec![i];
 
@@ -308,7 +312,7 @@ mod tests {
 
     #[test]
     fn the_schlick_approximation_under_total_internal_reflection() {
-        let shape = glass_sphere();
+        let node = Node::new(Box::new(glass_sphere()));
         let r = Ray::new(
             Point3D::new(0.0, 0.0, 2f32.sqrt() as FLOAT / 2.0),
             Vector3D::new(0.0, 1.0, 0.0),
@@ -316,11 +320,11 @@ mod tests {
         let xs = vec![
             Intersection {
                 t: -2f32.sqrt() as FLOAT / 2.0,
-                object: &shape,
+                object: &node,
             },
             Intersection {
                 t: 2f32.sqrt() as FLOAT / 2.0,
-                object: &shape,
+                object: &node,
             },
         ];
         let comps = IntersectionState::new(&xs[1], &r, &xs);
@@ -330,17 +334,17 @@ mod tests {
 
     #[test]
     fn the_schlick_approximation_with_a_perpendicular_viewing_angle() {
-        let shape = glass_sphere();
+        let node = Node::new(Box::new(glass_sphere()));
         let r =
             Ray::new(Point3D::new(0.0, 0.0, 0.0), Vector3D::new(0.0, 1.0, 0.0));
         let xs = vec![
             Intersection {
                 t: -1.0,
-                object: &shape,
+                object: &node,
             },
             Intersection {
                 t: 1.0,
-                object: &shape,
+                object: &node,
             },
         ];
         let comps = IntersectionState::new(&xs[1], &r, &xs);
@@ -351,14 +355,14 @@ mod tests {
 
     #[test]
     fn the_schlick_approximation_with_small_angle_and_n2_gt_n1() {
-        let shape = glass_sphere();
+        let node = Node::new(Box::new(glass_sphere()));
         let r = Ray::new(
             Point3D::new(0.0, 0.99, -2.0),
             Vector3D::new(0.0, 0.0, 1.0),
         );
         let xs = vec![Intersection {
             t: 1.8589,
-            object: &shape,
+            object: &node,
         }];
         let comps = IntersectionState::new(&xs[0], &r, &xs);
         let reflectance = comps.schlick();

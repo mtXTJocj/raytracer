@@ -1,13 +1,11 @@
 use super::{
-    intersection::Intersection, material::Material, point3d::Point3D, ray::Ray,
-    shape::Shape, transform::Transform, vector3d::Vector3D,
+    intersection::Intersection, material::Material, node::Node,
+    point3d::Point3D, ray::Ray, shape::Shape, vector3d::Vector3D,
 };
 
 /// 原点を中心とする半径 1 の単位球
 #[derive(Debug)]
 pub struct Sphere {
-    /// 球に対して適用する変換
-    transform: Transform,
     material: Material,
 }
 
@@ -15,21 +13,12 @@ impl Sphere {
     /// 新規に Sphere を作成する
     pub fn new() -> Self {
         Sphere {
-            transform: Transform::identity(),
             material: Material::new(),
         }
     }
 }
 
 impl Shape for Sphere {
-    fn transform(&self) -> &Transform {
-        &self.transform
-    }
-
-    fn transform_mut(&mut self) -> &mut Transform {
-        &mut self.transform
-    }
-
     fn material(&self) -> &Material {
         &self.material
     }
@@ -38,7 +27,11 @@ impl Shape for Sphere {
         &mut self.material
     }
 
-    fn local_intersect(&self, r: &Ray) -> Vec<Intersection> {
+    fn local_intersect<'a>(
+        &self,
+        r: &Ray,
+        n: &'a Node,
+    ) -> Vec<Intersection<'a>> {
         let o = r.origin();
         let d = r.direction();
         let sphere_to_ray = o - &Point3D::ZERO;
@@ -57,14 +50,8 @@ impl Shape for Sphere {
         let t2 = (-b + discriminant.sqrt()) / (2.0 * a);
 
         return vec![
-            Intersection {
-                t: t1,
-                object: self,
-            },
-            Intersection {
-                t: t2,
-                object: self,
-            },
+            Intersection { t: t1, object: n },
+            Intersection { t: t2, object: n },
         ];
     }
 
@@ -76,8 +63,8 @@ impl Shape for Sphere {
 #[cfg(test)]
 mod tests {
     use super::{
-        super::vector3d::Vector3D,
         super::{approx_eq, FLOAT},
+        super::{transform::Transform, vector3d::Vector3D},
         *,
     };
 
@@ -87,7 +74,7 @@ mod tests {
             Point3D::new(0.0, 0.0, -5.0),
             Vector3D::new(0.0, 0.0, 1.0),
         );
-        let s = Sphere::new();
+        let s = Node::new(Box::new(Sphere::new()));
 
         let xs = s.intersect(&r);
         assert_eq!(2, xs.len());
@@ -102,7 +89,7 @@ mod tests {
             Point3D::new(0.0, 1.0, -5.0),
             Vector3D::new(0.0, 0.0, 1.0),
         );
-        let s = Sphere::new();
+        let s = Node::new(Box::new(Sphere::new()));
 
         let xs = s.intersect(&r);
         assert_eq!(2, xs.len());
@@ -115,7 +102,7 @@ mod tests {
     fn a_ray_originates_inside_a_sphere() {
         let r =
             Ray::new(Point3D::new(0.0, 0.0, 0.0), Vector3D::new(0.0, 0.0, 1.0));
-        let s = Sphere::new();
+        let s = Node::new(Box::new(Sphere::new()));
 
         let xs = s.intersect(&r);
         assert_eq!(2, xs.len());
@@ -128,7 +115,7 @@ mod tests {
     fn a_sphere_is_behind_a_ray() {
         let r =
             Ray::new(Point3D::new(0.0, 0.0, 5.0), Vector3D::new(0.0, 0.0, 1.0));
-        let s = Sphere::new();
+        let s = Node::new(Box::new(Sphere::new()));
 
         let xs = s.intersect(&r);
         assert_eq!(2, xs.len());
@@ -143,7 +130,7 @@ mod tests {
             Point3D::new(0.0, 0.0, -5.0),
             Vector3D::new(0.0, 0.0, 1.0),
         );
-        let s = Sphere::new();
+        let s = Node::new(Box::new(Sphere::new()));
 
         let xs = s.intersect(&r);
 
@@ -154,31 +141,25 @@ mod tests {
         // 別々の vtable になることがあるため、false になるらしい。
         // そのため、as *const _ as *const () で fat pointer を regular poiner に
         // 強制的に変換して std::ptr::eq() でアドレスのみの比較する。
-        assert!(std::ptr::eq(
-            xs[0].object as *const _ as *const (),
-            &s as &dyn Shape as *const _ as *const (),
-        ));
-        assert!(std::ptr::eq(
-            xs[1].object as *const _ as *const (),
-            &s as &dyn Shape as *const _ as *const (),
-        ));
+        assert!(std::ptr::eq(xs[0].object, &s));
+        assert!(std::ptr::eq(xs[1].object, &s));
     }
 
     #[test]
     fn a_spheres_default_transformation() {
-        let s = Sphere::new();
+        let s = Node::new(Box::new(Sphere::new()));
 
         assert_eq!(Transform::identity(), *s.transform());
     }
 
     #[test]
     fn changing_a_spheres_transformation() {
-        let mut s = Sphere::new();
+        let mut s = Node::new(Box::new(Sphere::new()));
         let x = 2.0;
         let y = 3.0;
         let z = 4.0;
         let t = Transform::translation(x, y, z);
-        *s.transform_mut() = t;
+        s.set_transform(t);
 
         assert_eq!(Transform::translation(x, y, z), *s.transform());
     }
@@ -189,8 +170,8 @@ mod tests {
             Point3D::new(0.0, 0.0, -5.0),
             Vector3D::new(0.0, 0.0, 1.0),
         );
-        let mut s = Sphere::new();
-        *s.transform_mut() = Transform::scaling(2.0, 2.0, 2.0);
+        let mut s = Node::new(Box::new(Sphere::new()));
+        s.set_transform(Transform::scaling(2.0, 2.0, 2.0));
 
         let xs = s.intersect(&r);
 
@@ -205,8 +186,8 @@ mod tests {
             Point3D::new(0.0, 0.0, -5.0),
             Vector3D::new(0.0, 0.0, 1.0),
         );
-        let mut s = Sphere::new();
-        *s.transform_mut() = Transform::translation(5.0, 0.0, 0.0);
+        let mut s = Node::new(Box::new(Sphere::new()));
+        s.set_transform(Transform::translation(5.0, 0.0, 0.0));
 
         let xs = s.intersect(&r);
 
@@ -215,7 +196,7 @@ mod tests {
 
     #[test]
     fn the_normal_on_a_sphere_at_a_point_on_the_x_axis() {
-        let s = Sphere::new();
+        let s = Node::new(Box::new(Sphere::new()));
         let n = s.normal_at(&Point3D::new(1.0, 0.0, 0.0));
 
         assert_eq!(Vector3D::new(1.0, 0.0, 0.0), n);
@@ -223,7 +204,7 @@ mod tests {
 
     #[test]
     fn the_normal_on_a_sphere_at_a_point_on_the_y_axis() {
-        let s = Sphere::new();
+        let s = Node::new(Box::new(Sphere::new()));
         let n = s.normal_at(&Point3D::new(0.0, 1.0, 0.0));
 
         assert_eq!(Vector3D::new(0.0, 1.0, 0.0), n);
@@ -231,7 +212,7 @@ mod tests {
 
     #[test]
     fn the_normal_on_a_sphere_at_a_point_on_the_z_axis() {
-        let s = Sphere::new();
+        let s = Node::new(Box::new(Sphere::new()));
         let n = s.normal_at(&Point3D::new(0.0, 0.0, 1.0));
 
         assert_eq!(Vector3D::new(0.0, 0.0, 1.0), n);
@@ -239,7 +220,7 @@ mod tests {
 
     #[test]
     fn the_normal_on_a_sphere_at_a_nonaxial_point() {
-        let s = Sphere::new();
+        let s = Node::new(Box::new(Sphere::new()));
         let n = s.normal_at(&Point3D::new(
             3f32.sqrt() as FLOAT / 3.0,
             3f32.sqrt() as FLOAT / 3.0,
@@ -258,7 +239,7 @@ mod tests {
 
     #[test]
     fn the_normal_is_a_normalized_vector() {
-        let s = Sphere::new();
+        let s = Node::new(Box::new(Sphere::new()));
         let mut n = s.normal_at(&Point3D::new(
             3f32.sqrt() as FLOAT / 3.0,
             3f32.sqrt() as FLOAT / 3.0,
@@ -277,8 +258,8 @@ mod tests {
 
     #[test]
     fn computing_the_normal_on_a_translated_sphere() {
-        let mut s = Sphere::new();
-        *s.transform_mut() = Transform::translation(0.0, 1.0, 0.0);
+        let mut s = Node::new(Box::new(Sphere::new()));
+        s.set_transform(Transform::translation(0.0, 1.0, 0.0));
 
         let n = s.normal_at(&Point3D::new(0.0, 1.70711, -0.70711));
         assert_eq!(Vector3D::new(0.0, 0.70711, -0.70711), n);
@@ -286,9 +267,11 @@ mod tests {
 
     #[test]
     fn computing_the_normal_on_a_transformed_sphere() {
-        let mut s = Sphere::new();
-        *s.transform_mut() = &Transform::scaling(1.0, 0.5, 1.0)
-            * &Transform::rotation_z(std::f32::consts::PI as FLOAT / 5.0);
+        let mut s = Node::new(Box::new(Sphere::new()));
+        s.set_transform(
+            &Transform::scaling(1.0, 0.5, 1.0)
+                * &Transform::rotation_z(std::f32::consts::PI as FLOAT / 5.0),
+        );
 
         let n = s.normal_at(&Point3D::new(
             0.0,

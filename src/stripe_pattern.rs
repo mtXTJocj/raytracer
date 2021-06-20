@@ -43,7 +43,9 @@ impl Pattern for StripePattern {
 #[cfg(test)]
 mod tests {
     use super::{
-        super::{shape::Shape, sphere::Sphere, transform::Transform},
+        super::{
+            node::Node, shape::Shape, sphere::Sphere, transform::Transform,
+        },
         *,
     };
 
@@ -123,8 +125,8 @@ mod tests {
 
     #[test]
     fn stripes_with_an_object_transformation() {
-        let mut object = Sphere::new();
-        *object.transform_mut() = Transform::scaling(2.0, 2.0, 2.0);
+        let mut object = Node::new(Box::new(Sphere::new()));
+        object.set_transform(Transform::scaling(2.0, 2.0, 2.0));
         let pattern = StripePattern::new(Color::WHITE, Color::BLACK);
         let c = pattern.pattern_at_shape(&object, &Point3D::new(1.5, 0.0, 0.0));
 
@@ -133,7 +135,7 @@ mod tests {
 
     #[test]
     fn stripes_with_a_pattern_transformation() {
-        let object = Sphere::new();
+        let object = Node::new(Box::new(Sphere::new()));
         let mut pattern = StripePattern::new(Color::WHITE, Color::BLACK);
         *pattern.transform_mut() = Transform::scaling(2.0, 2.0, 2.0);
         let c = pattern.pattern_at_shape(&object, &Point3D::new(1.5, 0.0, 0.0));
@@ -143,8 +145,8 @@ mod tests {
 
     #[test]
     fn stripes_with_both_an_object_and_a_pattern_transformation() {
-        let mut object = Sphere::new();
-        *object.transform_mut() = Transform::scaling(2.0, 2.0, 2.0);
+        let mut object = Node::new(Box::new(Sphere::new()));
+        object.set_transform(Transform::scaling(2.0, 2.0, 2.0));
         let mut pattern = StripePattern::new(Color::WHITE, Color::BLACK);
         *pattern.transform_mut() = Transform::translation(0.5, 0.0, 0.0);
         let c = pattern.pattern_at_shape(&object, &Point3D::new(2.5, 0.0, 0.0));

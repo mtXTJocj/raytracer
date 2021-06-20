@@ -3,11 +3,10 @@ use super::{
     intersection::{hit, Intersection},
     intersection_state::IntersectionState,
     light::Light,
+    node::Node,
     point3d::Point3D,
     ray::Ray,
-    shape::Shape,
 };
-use std::boxed::Box;
 
 /// レンダリングに用いるライトとオブジェクトを集約する
 #[derive(Debug)]
@@ -15,7 +14,7 @@ pub struct World {
     /// ライト
     lights: Vec<Light>,
     /// オブジェクト
-    shapes: Vec<Box<dyn Shape>>,
+    nodes: Vec<Node>,
 }
 
 impl World {
@@ -23,7 +22,7 @@ impl World {
     pub fn new() -> Self {
         World {
             lights: vec![],
-            shapes: vec![],
+            nodes: vec![],
         }
     }
 
@@ -40,9 +39,9 @@ impl World {
     ///
     /// # Arguments
     ///
-    /// * `sphere` - 追加するオブジェクト
-    pub fn add_shape(&mut self, shape: Box<dyn Shape>) {
-        self.shapes.push(shape);
+    /// * `node` - 追加するオブジェクト
+    pub fn add_node(&mut self, node: Node) {
+        self.nodes.push(node);
     }
 
     /// Ray とオブジェクトの交差判定を行い、交差情報のリストを返す。
@@ -53,7 +52,7 @@ impl World {
     /// * `ray` - 判定対象となる Ray
     pub fn intersect(&self, ray: &Ray) -> Vec<Intersection> {
         let mut intersections = vec![];
-        for shape in &self.shapes {
+        for shape in &self.nodes {
             let mut xs = shape.intersect(ray);
             intersections.append(&mut xs);
         }
@@ -210,7 +209,7 @@ mod tests {
     use super::{
         super::{
             approx_eq, camera::Camera, color::Color, material::Material,
-            pattern::Pattern, plane::Plane, sphere::Sphere,
+            pattern::Pattern, plane::Plane, shape::Shape, sphere::Sphere,
             transform::Transform, vector3d::Vector3D, FLOAT,
         },
         *,
@@ -258,11 +257,11 @@ mod tests {
         material.diffuse = 0.7;
         material.specular = 0.2;
         *sphere.material_mut() = material;
-        w.add_shape(sphere);
+        w.add_node(Node::new(sphere));
 
-        let mut sphere = Box::new(Sphere::new());
-        *sphere.transform_mut() = Transform::scaling(0.5, 0.5, 0.5);
-        w.add_shape(sphere);
+        let mut sphere = Node::new(Box::new(Sphere::new()));
+        sphere.set_transform(Transform::scaling(0.5, 0.5, 0.5));
+        w.add_node(sphere);
         return w;
     }
 
@@ -289,7 +288,7 @@ mod tests {
             Point3D::new(0.0, 0.0, -5.0),
             Vector3D::new(0.0, 0.0, 1.0),
         );
-        let shape = w.shapes[0].as_ref();
+        let shape = &w.nodes[0];
         let i = Intersection {
             t: 4.0,
             object: shape,
@@ -306,7 +305,7 @@ mod tests {
         w.lights[0] = Light::new(Point3D::new(0.0, 0.25, 0.0), Color::WHITE);
         let r =
             Ray::new(Point3D::new(0.0, 0.0, 0.0), Vector3D::new(0.0, 0.0, 1.0));
-        let shape = w.shapes[1].as_ref();
+        let shape = &w.nodes[1];
         let i = Intersection {
             t: 0.5,
             object: shape,
@@ -329,7 +328,7 @@ mod tests {
         );
         w.add_light(l);
 
-        let shape = w.shapes[0].as_ref();
+        let shape = &w.nodes[0];
         let i = Intersection {
             t: 4.0,
             object: shape,
@@ -365,14 +364,14 @@ mod tests {
     #[test]
     fn the_color_with_an_intersection_behinde_a_ray() {
         let mut w = default_world();
-        w.shapes[0].material_mut().ambient = 1.0;
-        w.shapes[1].material_mut().ambient = 1.0;
+        w.nodes[0].material_mut().ambient = 1.0;
+        w.nodes[1].material_mut().ambient = 1.0;
         let r = Ray::new(
             Point3D::new(0.0, 0.0, 0.75),
             Vector3D::new(0.0, 0.0, -1.0),
         );
         let c = w.color_at(&r, 1);
-        assert_eq!(w.shapes[1].material().color, c);
+        assert_eq!(w.nodes[1].material().color, c);
     }
 
     #[test]
@@ -425,17 +424,17 @@ mod tests {
         let mut w = World::new();
         let light = Light::new(Point3D::new(0.0, 0.0, -10.0), Color::WHITE);
         w.add_light(light);
-        let s1 = Box::new(Sphere::new());
-        w.add_shape(s1);
-        let mut s2 = Box::new(Sphere::new());
-        *s2.transform_mut() = Transform::translation(0.0, 0.0, 10.0);
-        w.add_shape(s2);
+        let s1 = Node::new(Box::new(Sphere::new()));
+        w.add_node(s1);
+        let mut s2 = Node::new(Box::new(Sphere::new()));
+        s2.set_transform(Transform::translation(0.0, 0.0, 10.0));
+        w.add_node(s2);
 
         let r =
             Ray::new(Point3D::new(0.0, 0.0, 5.0), Vector3D::new(0.0, 0.0, 1.0));
         let i = Intersection {
             t: 4.0,
-            object: w.shapes[1].as_ref(),
+            object: &w.nodes[1],
         };
         let comps = IntersectionState::new(&i, &r, &vec![]);
         let c = w.shade_hit(&comps, 1);
@@ -448,10 +447,10 @@ mod tests {
         let mut w = default_world();
         let r =
             Ray::new(Point3D::new(0.0, 0.0, 0.0), Vector3D::new(0.0, 0.0, 1.0));
-        w.shapes[1].material_mut().ambient = 1.0;
+        w.nodes[1].material_mut().ambient = 1.0;
         let i = Intersection {
             t: 1.0,
-            object: w.shapes[1].as_ref(),
+            object: &w.nodes[1],
         };
         let comps = IntersectionState::new(&i, &r, &vec![]);
         let color = w.reflected_color(&comps, 1);
@@ -462,10 +461,10 @@ mod tests {
     #[test]
     fn the_reflected_color_for_a_reflective_material() {
         let mut w = default_world();
-        let mut shape = Plane::new();
-        shape.material_mut().reflective = 0.5;
-        *shape.transform_mut() = Transform::translation(0.0, -1.0, 0.0);
-        w.add_shape(Box::new(shape));
+        let mut node = Node::new(Box::new(Plane::new()));
+        node.material_mut().reflective = 0.5;
+        node.set_transform(Transform::translation(0.0, -1.0, 0.0));
+        w.add_node(node);
         let r = Ray::new(
             Point3D::new(0.0, 0.0, -3.0),
             Vector3D::new(
@@ -476,7 +475,7 @@ mod tests {
         );
         let i = Intersection {
             t: 2f32.sqrt() as FLOAT,
-            object: w.shapes[2].as_ref(),
+            object: &w.nodes[2],
         };
         let comps = IntersectionState::new(&i, &r, &vec![]);
         let color = w.reflected_color(&comps, 1);
@@ -487,10 +486,10 @@ mod tests {
     #[test]
     fn shade_hit_with_a_reflective_material() {
         let mut w = default_world();
-        let mut shape = Plane::new();
-        shape.material_mut().reflective = 0.5;
-        *shape.transform_mut() = Transform::translation(0.0, -1.0, 0.0);
-        w.add_shape(Box::new(shape));
+        let mut node = Node::new(Box::new(Plane::new()));
+        node.material_mut().reflective = 0.5;
+        node.set_transform(Transform::translation(0.0, -1.0, 0.0));
+        w.add_node(node);
         let r = Ray::new(
             Point3D::new(0.0, 0.0, -3.0),
             Vector3D::new(
@@ -501,7 +500,7 @@ mod tests {
         );
         let i = Intersection {
             t: 2f32.sqrt() as FLOAT,
-            object: w.shapes[2].as_ref(),
+            object: &w.nodes[2],
         };
         let comps = IntersectionState::new(&i, &r, &vec![]);
         let color = w.shade_hit(&comps, 1);
@@ -514,15 +513,15 @@ mod tests {
         let mut w = World::new();
         w.add_light(Light::new(Point3D::new(0.0, 0.0, 0.0), Color::WHITE));
 
-        let mut lower = Plane::new();
+        let mut lower = Node::new(Box::new(Plane::new()));
         lower.material_mut().reflective = 1.0;
-        *lower.transform_mut() = Transform::translation(0.0, -1.0, 0.0);
-        w.add_shape(Box::new(lower));
+        lower.set_transform(Transform::translation(0.0, -1.0, 0.0));
+        w.add_node(lower);
 
-        let mut upper = Plane::new();
+        let mut upper = Node::new(Box::new(Plane::new()));
         upper.material_mut().reflective = 1.0;
-        *upper.transform_mut() = Transform::translation(0.0, 1.0, 0.0);
-        w.add_shape(Box::new(upper));
+        upper.set_transform(Transform::translation(0.0, 1.0, 0.0));
+        w.add_node(upper);
 
         let r =
             Ray::new(Point3D::new(0.0, 0.0, 0.0), Vector3D::new(0.0, 1.0, 0.0));
@@ -533,11 +532,11 @@ mod tests {
     #[test]
     fn the_reflected_color_at_the_maximum_recursive_depth() {
         let mut w = default_world();
-        let mut shape = Plane::new();
-        shape.material_mut().reflective = 0.5;
-        *shape.transform_mut() = Transform::translation(0.0, -1.0, 0.0);
+        let mut node = Node::new(Box::new(Plane::new()));
+        node.material_mut().reflective = 0.5;
+        node.set_transform(Transform::translation(0.0, -1.0, 0.0));
 
-        w.add_shape(Box::new(shape));
+        w.add_node(node);
         let r = Ray::new(
             Point3D::new(0.0, 0.0, -3.0),
             Vector3D::new(
@@ -548,7 +547,7 @@ mod tests {
         );
         let i = Intersection {
             t: 2f32.sqrt() as FLOAT,
-            object: w.shapes[2].as_ref(),
+            object: &w.nodes[2],
         };
         let comps = IntersectionState::new(&i, &r, &vec![]);
         let color = w.reflected_color(&comps, 0);
@@ -559,7 +558,7 @@ mod tests {
     #[test]
     fn the_refracted_color_with_an_opeque_surface() {
         let w = default_world();
-        let shape = &w.shapes[0];
+        let shape = &w.nodes[0];
         let r = Ray::new(
             Point3D::new(0.0, 0.0, -5.0),
             Vector3D::new(0.0, 0.0, 1.0),
@@ -567,11 +566,11 @@ mod tests {
         let xs = vec![
             Intersection {
                 t: 4.0,
-                object: shape.as_ref(),
+                object: shape,
             },
             Intersection {
                 t: 6.0,
-                object: shape.as_ref(),
+                object: shape,
             },
         ];
         let comps = IntersectionState::new(&xs[0], &r, &xs);
@@ -582,8 +581,8 @@ mod tests {
     #[test]
     fn the_refracted_color_at_the_maximum_recursive_depth() {
         let mut w = default_world();
-        w.shapes[0].material_mut().transparency = 1.0;
-        w.shapes[0].material_mut().refractive_index = 1.5;
+        w.nodes[0].material_mut().transparency = 1.0;
+        w.nodes[0].material_mut().refractive_index = 1.5;
         let r = Ray::new(
             Point3D::new(0.0, 0.0, -5.0),
             Vector3D::new(0.0, 0.0, 1.0),
@@ -591,11 +590,11 @@ mod tests {
         let xs = vec![
             Intersection {
                 t: 4.0,
-                object: w.shapes[0].as_ref(),
+                object: &w.nodes[0],
             },
             Intersection {
                 t: 6.0,
-                object: w.shapes[0].as_ref(),
+                object: &w.nodes[0],
             },
         ];
         let comps = IntersectionState::new(&xs[0], &r, &xs);
@@ -606,8 +605,8 @@ mod tests {
     #[test]
     fn the_refracted_color_under_total_internal_reflection() {
         let mut w = default_world();
-        w.shapes[0].material_mut().transparency = 1.0;
-        w.shapes[0].material_mut().refractive_index = 1.5;
+        w.nodes[0].material_mut().transparency = 1.0;
+        w.nodes[0].material_mut().refractive_index = 1.5;
         let r = Ray::new(
             Point3D::new(0.0, 0.0, 2f32.sqrt() as FLOAT / 2.0),
             Vector3D::new(0.0, 1.0, 0.0),
@@ -615,11 +614,11 @@ mod tests {
         let xs = vec![
             Intersection {
                 t: -2f32.sqrt() as FLOAT / 2.0,
-                object: w.shapes[0].as_ref(),
+                object: &w.nodes[0],
             },
             Intersection {
                 t: 2f32.sqrt() as FLOAT / 2.0,
-                object: w.shapes[0].as_ref(),
+                object: &w.nodes[0],
             },
         ];
 
@@ -632,31 +631,31 @@ mod tests {
     #[test]
     fn the_refracted_color_with_a_refracted_ray() {
         let mut w = default_world();
-        w.shapes[0].material_mut().ambient = 1.0;
-        *w.shapes[0].material_mut().pattern_mut() =
+        w.nodes[0].material_mut().ambient = 1.0;
+        *w.nodes[0].material_mut().pattern_mut() =
             Some(Box::new(TestPattern::new()));
 
-        w.shapes[1].material_mut().transparency = 1.0;
-        w.shapes[1].material_mut().refractive_index = 1.5;
+        w.nodes[1].material_mut().transparency = 1.0;
+        w.nodes[1].material_mut().refractive_index = 1.5;
 
         let r =
             Ray::new(Point3D::new(0.0, 0.0, 0.1), Vector3D::new(0.0, 1.0, 0.0));
         let xs = vec![
             Intersection {
                 t: -0.9899,
-                object: w.shapes[0].as_ref(),
+                object: &w.nodes[0],
             },
             Intersection {
                 t: -0.4899,
-                object: w.shapes[1].as_ref(),
+                object: &w.nodes[1],
             },
             Intersection {
                 t: 0.4899,
-                object: w.shapes[1].as_ref(),
+                object: &w.nodes[1],
             },
             Intersection {
                 t: 0.9899,
-                object: w.shapes[0].as_ref(),
+                object: &w.nodes[0],
             },
         ];
 
@@ -669,17 +668,17 @@ mod tests {
     fn shadow_hit_with_a_transparent_material() {
         let mut w = default_world();
 
-        let mut floor = Plane::new();
-        *floor.transform_mut() = Transform::translation(0.0, -1.0, 0.0);
+        let mut floor = Node::new(Box::new(Plane::new()));
+        floor.set_transform(Transform::translation(0.0, -1.0, 0.0));
         floor.material_mut().transparency = 0.5;
         floor.material_mut().refractive_index = 1.5;
-        w.add_shape(Box::new(floor));
+        w.add_node(floor);
 
-        let mut ball = Sphere::new();
+        let mut ball = Node::new(Box::new(Sphere::new()));
         ball.material_mut().color = Color::new(1.0, 0.0, 0.0);
         ball.material_mut().ambient = 0.5;
-        *ball.transform_mut() = Transform::translation(0.0, -3.5, -0.5);
-        w.add_shape(Box::new(ball));
+        ball.set_transform(Transform::translation(0.0, -3.5, -0.5));
+        w.add_node(ball);
 
         let r = Ray::new(
             Point3D::new(0.0, 0.0, -3.0),
@@ -691,7 +690,7 @@ mod tests {
         );
         let xs = vec![Intersection {
             t: 2f32.sqrt() as FLOAT,
-            object: w.shapes[2].as_ref(),
+            object: &w.nodes[2],
         }];
         let comps = IntersectionState::new(&xs[0], &r, &xs);
         let color = w.shade_hit(&comps, 5);
@@ -711,22 +710,22 @@ mod tests {
             ),
         );
 
-        let mut floor = Plane::new();
-        *floor.transform_mut() = Transform::translation(0.0, -1.0, 0.0);
+        let mut floor = Node::new(Box::new(Plane::new()));
+        floor.set_transform(Transform::translation(0.0, -1.0, 0.0));
         floor.material_mut().reflective = 0.5;
         floor.material_mut().transparency = 0.5;
         floor.material_mut().refractive_index = 1.5;
-        w.add_shape(Box::new(floor));
+        w.add_node(floor);
 
-        let mut ball = Sphere::new();
+        let mut ball = Node::new(Box::new(Sphere::new()));
         ball.material_mut().color = Color::new(1.0, 0.0, 0.0);
         ball.material_mut().ambient = 0.5;
-        *ball.transform_mut() = Transform::translation(0.0, -3.5, -0.5);
-        w.add_shape(Box::new(ball));
+        ball.set_transform(Transform::translation(0.0, -3.5, -0.5));
+        w.add_node(ball);
 
         let xs = vec![Intersection {
             t: 2f32.sqrt() as FLOAT,
-            object: w.shapes[2].as_ref(),
+            object: &w.nodes[2],
         }];
         let comps = IntersectionState::new(&xs[0], &r, &xs);
         let color = w.shade_hit(&comps, 5);
