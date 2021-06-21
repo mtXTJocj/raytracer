@@ -37,6 +37,14 @@ impl Shape for Group {
             xs.append(&mut child.intersect(r));
         }
 
+        xs.sort_unstable_by(|i1, i2| {
+            if i1.t < i2.t {
+                std::cmp::Ordering::Less
+            } else {
+                std::cmp::Ordering::Greater
+            }
+        });
+
         xs
     }
 
@@ -83,15 +91,14 @@ mod tests {
     #[test]
     fn intersecting_a_ray_with_a_nonempty_group() {
         let mut g = Box::new(Node::new(Box::new(Group::new())));
-        g.set_transform(Transform::scaling(2.0, 2.0, 2.0));
         let s1 = Box::new(Node::new(Box::new(Sphere::new())));
         let mut s2 = Box::new(Node::new(Box::new(Sphere::new())));
         s2.set_transform(Transform::translation(0.0, 0.0, -3.0));
         let mut s3 = Box::new(Node::new(Box::new(Sphere::new())));
-        s2.set_transform(Transform::translation(5.0, 0.0, 0.0));
+        s3.set_transform(Transform::translation(5.0, 0.0, 0.0));
 
-        let s1_ptr = &*s1;
-        let s2_ptr = &*s2;
+        let s1_ptr = &*s1 as *const Node;
+        let s2_ptr = &*s2 as *const Node;
         add_child(&mut g, s1);
         add_child(&mut g, s2);
         add_child(&mut g, s3);
@@ -104,9 +111,27 @@ mod tests {
         let xs = g.intersect(&r);
         assert_eq!(4, xs.len());
 
-        //        assert!(std::ptr::eq(s1_ptr, xs[0].object));
-        xs[1].object;
-        xs[2].object;
-        xs[3].object;
+        assert!(std::ptr::eq(s2_ptr, xs[0].object));
+        assert!(std::ptr::eq(s2_ptr, xs[1].object));
+        assert!(std::ptr::eq(s1_ptr, xs[2].object));
+        assert!(std::ptr::eq(s1_ptr, xs[3].object));
+    }
+
+    #[test]
+    fn intersecting_a_transformed_group() {
+        let mut g = Box::new(Node::new(Box::new(Group::new())));
+        g.set_transform(Transform::scaling(2.0, 2.0, 2.0));
+        let mut s = Box::new(Node::new(Box::new(Sphere::new())));
+        s.set_transform(Transform::translation(5.0, 0.0, 0.0));
+        add_child(&mut g, s);
+
+        let r = Ray::new(
+            Point3D::new(10.0, 0.0, -10.0),
+            Vector3D::new(0.0, 0.0, 1.0),
+        );
+
+        let xs = g.intersect(&r);
+
+        assert_eq!(2, xs.len());
     }
 }
