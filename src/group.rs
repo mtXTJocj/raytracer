@@ -56,7 +56,7 @@ impl Shape for Group {
 #[cfg(test)]
 mod tests {
     use super::{
-        super::{sphere::Sphere, transform::Transform},
+        super::{sphere::Sphere, transform::Transform, FLOAT},
         *,
     };
 
@@ -133,5 +133,78 @@ mod tests {
         let xs = g.intersect(&r);
 
         assert_eq!(2, xs.len());
+    }
+
+    #[test]
+    fn converting_a_point_from_world_to_object_space() {
+        let mut g1 = Node::new(Box::new(Group::new()));
+        g1.set_transform(Transform::rotation_y(
+            std::f64::consts::FRAC_PI_2 as FLOAT,
+        ));
+        let mut g2 = Node::new(Box::new(Group::new()));
+        g2.set_transform(Transform::scaling(2.0, 2.0, 2.0));
+        let mut s = Node::new(Box::new(Sphere::new()));
+        s.set_transform(Transform::translation(5.0, 0.0, 0.0));
+        let s_ptr = &*s as *const Node;
+
+        g2.add_child(s);
+        g1.add_child(g2);
+
+        let p = unsafe {
+            s_ptr
+                .as_ref()
+                .unwrap()
+                .world_to_object(&Point3D::new(-2.0, 0.0, -10.0))
+        };
+        assert_eq!(Point3D::new(0.0, 0.0, -1.0), p);
+    }
+
+    #[test]
+    fn converting_a_normal_from_world_to_object_space() {
+        let mut g1 = Node::new(Box::new(Group::new()));
+        g1.set_transform(Transform::rotation_y(
+            std::f64::consts::FRAC_PI_2 as FLOAT,
+        ));
+        let mut g2 = Node::new(Box::new(Group::new()));
+        g2.set_transform(Transform::scaling(1.0, 2.0, 3.0));
+        let mut s = Node::new(Box::new(Sphere::new()));
+        s.set_transform(Transform::translation(5.0, 0.0, 0.0));
+        let s_ptr = &*s as *const Node;
+
+        g2.add_child(s);
+        g1.add_child(g2);
+
+        let n = unsafe {
+            s_ptr.as_ref().unwrap().normal_to_world(&Vector3D::new(
+                (3.0 as FLOAT).sqrt() / 3.0,
+                (3.0 as FLOAT).sqrt() / 3.0,
+                (3.0 as FLOAT).sqrt() / 3.0,
+            ))
+        };
+        assert_eq!(Vector3D::new(0.285714, 0.428571, -0.857143), n);
+    }
+
+    #[test]
+    fn finding_the_normal_on_a_child_object() {
+        let mut g1 = Node::new(Box::new(Group::new()));
+        g1.set_transform(Transform::rotation_y(
+            std::f64::consts::FRAC_PI_2 as FLOAT,
+        ));
+        let mut g2 = Node::new(Box::new(Group::new()));
+        g2.set_transform(Transform::scaling(1.0, 2.0, 3.0));
+        let mut s = Node::new(Box::new(Sphere::new()));
+        s.set_transform(Transform::translation(5.0, 0.0, 0.0));
+        let s_ptr = &*s as *const Node;
+
+        g2.add_child(s);
+        g1.add_child(g2);
+
+        let n = unsafe {
+            s_ptr
+                .as_ref()
+                .unwrap()
+                .normal_at(&Point3D::new(1.7321, 1.1547, -5.5774))
+        };
+        assert_eq!(Vector3D::new(0.2857, 0.428543, -0.85716), n)
     }
 }

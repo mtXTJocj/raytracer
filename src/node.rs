@@ -33,6 +33,25 @@ impl Node {
         self.transform = transform;
     }
 
+    pub(crate) fn world_to_object(&self, p: &Point3D) -> Point3D {
+        match self.parent {
+            None => self.transform().inv() * p,
+            Some(n) => unsafe {
+                self.transform().inv() * &n.as_ref().world_to_object(p)
+            },
+        }
+    }
+
+    pub(crate) fn normal_to_world(&self, n: &Vector3D) -> Vector3D {
+        match self.parent {
+            None => self.transform.apply_to_normal(n),
+            Some(node) => unsafe {
+                node.as_ref()
+                    .normal_to_world(&(self.transform().apply_to_normal(n)))
+            },
+        }
+    }
+
     pub fn material(&self) -> &Material {
         self.shape.material()
     }
@@ -56,10 +75,10 @@ impl Node {
     /// # Argumets
     /// * `p` - self 上の点
     pub fn normal_at(&self, p: &Point3D) -> Vector3D {
-        let p_in_local = self.transform.inv() * p;
-        let n = self.shape.local_normal_at(&p_in_local);
+        let local_point = self.world_to_object(p);
+        let local_normal = self.shape.local_normal_at(&local_point);
 
-        self.transform.apply_to_normal(&n)
+        self.normal_to_world(&local_normal)
     }
 }
 
