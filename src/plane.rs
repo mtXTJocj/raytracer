@@ -99,10 +99,10 @@ mod tests {
             Vector3D::new(0.0, -1.0, 0.0),
         );
 
-        let xs = p.local_intersect(&r, &dummy_node);
+        let xs = p.local_intersect(&r, &*dummy_node);
         assert_eq!(1, xs.len());
         assert_eq!(1.0, xs[0].t);
-        assert!(std::ptr::eq(xs[0].object, &dummy_node));
+        assert!(std::ptr::eq(xs[0].object, &*dummy_node));
     }
 
     #[test]
@@ -115,9 +115,9 @@ mod tests {
             Vector3D::new(0.0, 1.0, 0.0),
         );
 
-        let xs = p.local_intersect(&r, &dummy_node);
+        let xs = p.local_intersect(&r, &*dummy_node);
         assert_eq!(1, xs.len());
         assert_eq!(1.0, xs[0].t);
-        assert!(std::ptr::eq(xs[0].object, &dummy_node));
+        assert!(std::ptr::eq(xs[0].object, &*dummy_node));
     }
 }

@@ -56,7 +56,7 @@ impl Shape for Group {
 #[cfg(test)]
 mod tests {
     use super::{
-        super::{node::add_child, sphere::Sphere, transform::Transform},
+        super::{sphere::Sphere, transform::Transform},
         *,
     };
 
@@ -69,11 +69,11 @@ mod tests {
 
     #[test]
     fn adding_a_child_to_a_group() {
-        let mut p = Box::new(Node::new(Box::new(Group::new())));
-        let mut c = Box::new(Node::new(Box::new(Group::new())));
+        let mut p = Node::new(Box::new(Group::new()));
+        let mut c = Node::new(Box::new(Group::new()));
         let child_ptr = &*c;
 
-        add_child(&mut p, c);
+        p.add_child(c);
     }
 
     #[test]
@@ -90,18 +90,18 @@ mod tests {
 
     #[test]
     fn intersecting_a_ray_with_a_nonempty_group() {
-        let mut g = Box::new(Node::new(Box::new(Group::new())));
-        let s1 = Box::new(Node::new(Box::new(Sphere::new())));
-        let mut s2 = Box::new(Node::new(Box::new(Sphere::new())));
+        let mut g = Node::new(Box::new(Group::new()));
+        let s1 = Node::new(Box::new(Sphere::new()));
+        let mut s2 = Node::new(Box::new(Sphere::new()));
         s2.set_transform(Transform::translation(0.0, 0.0, -3.0));
-        let mut s3 = Box::new(Node::new(Box::new(Sphere::new())));
+        let mut s3 = Node::new(Box::new(Sphere::new()));
         s3.set_transform(Transform::translation(5.0, 0.0, 0.0));
 
         let s1_ptr = &*s1 as *const Node;
         let s2_ptr = &*s2 as *const Node;
-        add_child(&mut g, s1);
-        add_child(&mut g, s2);
-        add_child(&mut g, s3);
+        g.add_child(s1);
+        g.add_child(s2);
+        g.add_child(s3);
 
         let r = Ray::new(
             Point3D::new(0.0, 0.0, -5.0),
@@ -119,11 +119,11 @@ mod tests {
 
     #[test]
     fn intersecting_a_transformed_group() {
-        let mut g = Box::new(Node::new(Box::new(Group::new())));
+        let mut g = Node::new(Box::new(Group::new()));
         g.set_transform(Transform::scaling(2.0, 2.0, 2.0));
-        let mut s = Box::new(Node::new(Box::new(Sphere::new())));
+        let mut s = Node::new(Box::new(Sphere::new()));
         s.set_transform(Transform::translation(5.0, 0.0, 0.0));
-        add_child(&mut g, s);
+        g.add_child(s);
 
         let r = Ray::new(
             Point3D::new(10.0, 0.0, -10.0),

@@ -141,8 +141,8 @@ mod tests {
         // 別々の vtable になることがあるため、false になるらしい。
         // そのため、as *const _ as *const () で fat pointer を regular poiner に
         // 強制的に変換して std::ptr::eq() でアドレスのみの比較する。
-        assert!(std::ptr::eq(xs[0].object, &s));
-        assert!(std::ptr::eq(xs[1].object, &s));
+        assert!(std::ptr::eq(xs[0].object, &*s));
+        assert!(std::ptr::eq(xs[1].object, &*s));
     }
 
     #[test]

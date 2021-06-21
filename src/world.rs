@@ -14,7 +14,7 @@ pub struct World {
     /// ライト
     lights: Vec<Light>,
     /// オブジェクト
-    nodes: Vec<Node>,
+    nodes: Vec<Box<Node>>,
 }
 
 impl World {
@@ -40,7 +40,7 @@ impl World {
     /// # Arguments
     ///
     /// * `node` - 追加するオブジェクト
-    pub fn add_node(&mut self, node: Node) {
+    pub fn add_node(&mut self, node: Box<Node>) {
         self.nodes.push(node);
     }
 

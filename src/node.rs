@@ -12,12 +12,17 @@ pub struct Node {
 }
 
 impl Node {
-    pub fn new(shape: Box<dyn Shape>) -> Self {
-        Node {
+    pub fn new(shape: Box<dyn Shape>) -> Box<Self> {
+        Box::new(Node {
             parent: None,
             transform: Transform::identity(),
             shape,
-        }
+        })
+    }
+
+    pub fn add_child(&mut self, mut child: Box<Node>) {
+        child.parent = NonNull::new(&mut *self);
+        self.shape.add_child(child);
     }
 
     pub fn transform(&self) -> &Transform {
@@ -56,11 +61,6 @@ impl Node {
 
         self.transform.apply_to_normal(&n)
     }
-}
-
-pub fn add_child(parent: &mut Box<Node>, mut child: Box<Node>) {
-    child.parent = NonNull::new(&mut **parent);
-    parent.shape.add_child(child);
 }
 
 #[cfg(test)]
