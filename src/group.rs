@@ -48,7 +48,7 @@ impl Shape for Group {
         xs
     }
 
-    fn local_normal_at(&self, p: &Point3D) -> Vector3D {
+    fn local_normal_at(&self, _p: &Point3D) -> Vector3D {
         panic!()
     }
 }

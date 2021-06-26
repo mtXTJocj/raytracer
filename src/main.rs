@@ -1,6 +1,6 @@
 use raytracer::{
     camera::Camera, checkers_pattern::CheckersPattern, color::Color,
-    cone::Cone, cylinder::Cylinder, group::Group, light::Light, node::Node,
+    cylinder::Cylinder, group::Group, light::Light, node::Node,
     pattern::Pattern, plane::Plane, point3d::Point3D, shape::Shape,
     sphere::Sphere, transform::Transform, vector3d::Vector3D, world::World,
     FLOAT,

@@ -5,7 +5,7 @@ use super::{
 use std::fmt::Debug;
 
 pub trait Shape: Debug {
-    fn add_child(&mut self, child: Box<Node>) {
+    fn add_child(&mut self, _child: Box<Node>) {
         panic!();
     }
 
