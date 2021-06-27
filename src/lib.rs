@@ -22,6 +22,7 @@ pub mod shape;
 pub mod sphere;
 pub mod stripe_pattern;
 pub mod transform;
+pub mod triangle;
 pub mod vector3d;
 pub mod world;
 
