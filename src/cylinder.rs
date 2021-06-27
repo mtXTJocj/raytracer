@@ -1,14 +1,12 @@
 use crate::{
-    approx_eq, intersection::Intersection, material::Material,
-    point3d::Point3D, ray::Ray, shape::Shape, transform::Transform,
-    vector3d::Vector3D, EPSILON, FLOAT, INFINITY,
+    approx_eq, intersection::Intersection, material::Material, node::Node,
+    point3d::Point3D, ray::Ray, shape::Shape, vector3d::Vector3D, EPSILON,
+    FLOAT, INFINITY,
 };
 
-/// Axis Aligned な cube
+/// Cylinder
 #[derive(Debug)]
 pub struct Cylinder {
-    /// Cylinder に対して適用する変換
-    transform: Transform,
     material: Material,
     ///
     minimum: FLOAT,
@@ -22,7 +20,6 @@ impl Cylinder {
     /// 新規に Cylinder を作成する
     pub fn new() -> Self {
         Cylinder {
-            transform: Transform::identity(),
             material: Material::new(),
             minimum: -INFINITY,
             maximum: INFINITY,
@@ -54,7 +51,12 @@ impl Cylinder {
         &mut self.closed
     }
 
-    fn intersect_caps<'a>(&'a self, r: &Ray, xs: &mut Vec<Intersection<'a>>) {
+    fn intersect_caps<'a>(
+        &'a self,
+        r: &Ray,
+        n: &'a Node,
+        xs: &mut Vec<Intersection<'a>>,
+    ) {
         fn check_cap(r: &Ray, t: FLOAT) -> bool {
             let x = r.origin().x + t * r.direction().x;
             let z = r.origin().z + t * r.direction().z;
@@ -72,27 +74,19 @@ impl Cylinder {
         // by intersecting the ray with the plane at y = cyl.minimum
         let t = (self.minimum() - r.origin().y) / r.direction().y;
         if check_cap(&r, t) {
-            xs.push(Intersection { t: t, object: self });
+            xs.push(Intersection { t: t, object: n });
         }
 
         // check for an intersection with the upper end cap
         // by intersecting the ray with the plane at y = cyl.maximum
         let t = (self.maximum() - r.origin().y) / r.direction().y;
         if check_cap(&r, t) {
-            xs.push(Intersection { t: t, object: self });
+            xs.push(Intersection { t: t, object: n });
         }
     }
 }
 
 impl Shape for Cylinder {
-    fn transform(&self) -> &Transform {
-        &self.transform
-    }
-
-    fn transform_mut(&mut self) -> &mut Transform {
-        &mut self.transform
-    }
-
     fn material(&self) -> &Material {
         &self.material
     }
@@ -101,7 +95,11 @@ impl Shape for Cylinder {
         &mut self.material
     }
 
-    fn local_intersect(&self, r: &Ray) -> Vec<Intersection> {
+    fn local_intersect<'a>(
+        &'a self,
+        r: &Ray,
+        n: &'a Node,
+    ) -> Vec<Intersection<'a>> {
         let dir = r.direction();
         let o = r.origin();
 
@@ -120,22 +118,16 @@ impl Shape for Cylinder {
 
                 let y0 = o.y + t0 * dir.y;
                 if self.minimum() < y0 && y0 < self.maximum() {
-                    xs.push(Intersection {
-                        t: t0,
-                        object: self,
-                    });
+                    xs.push(Intersection { t: t0, object: n });
                 }
                 let y1 = o.y + t1 * dir.y;
                 if self.minimum() < y1 && y1 < self.maximum() {
-                    xs.push(Intersection {
-                        t: t1,
-                        object: self,
-                    });
+                    xs.push(Intersection { t: t1, object: n });
                 }
             }
         }
 
-        self.intersect_caps(&r, &mut xs);
+        self.intersect_caps(&r, n, &mut xs);
         xs
     }
 
@@ -159,33 +151,37 @@ mod tests {
 
     #[test]
     fn a_ray_misses_a_cylinder() {
+        let dummy_node = Node::new(Box::new(Cylinder::new()));
+
         let cyl = Cylinder::new();
         let mut direction = Vector3D::new(0.0, 1.0, 0.0);
         direction.normalize();
         let r = Ray::new(Point3D::new(1.0, 0.0, 0.0), direction);
-        let xs = cyl.local_intersect(&r);
+        let xs = cyl.local_intersect(&r, &dummy_node);
         assert_eq!(0, xs.len());
 
         let mut direction = Vector3D::new(0.0, 1.0, 0.0);
         direction.normalize();
         let r = Ray::new(Point3D::new(0.0, 0.0, 0.0), direction);
-        let xs = cyl.local_intersect(&r);
+        let xs = cyl.local_intersect(&r, &dummy_node);
         assert_eq!(0, xs.len());
 
         let mut direction = Vector3D::new(1.0, 1.0, 1.0);
         direction.normalize();
         let r = Ray::new(Point3D::new(0.0, 0.0, -5.0), direction);
-        let xs = cyl.local_intersect(&r);
+        let xs = cyl.local_intersect(&r, &dummy_node);
         assert_eq!(0, xs.len());
     }
 
     #[test]
     fn a_ray_strikes_a_cylinder() {
+        let dummy_node = Node::new(Box::new(Cylinder::new()));
+
         let cyl = Cylinder::new();
         let mut direction = Vector3D::new(0.0, 0.0, 1.0);
         direction.normalize();
         let r = Ray::new(Point3D::new(1.0, 0.0, -5.0), direction);
-        let xs = cyl.local_intersect(&r);
+        let xs = cyl.local_intersect(&r, &dummy_node);
         assert_eq!(2, xs.len());
         assert_eq!(5.0, xs[0].t);
         assert_eq!(5.0, xs[1].t);
@@ -193,7 +189,7 @@ mod tests {
         let mut direction = Vector3D::new(0.0, 0.0, 1.0);
         direction.normalize();
         let r = Ray::new(Point3D::new(0.0, 0.0, -5.0), direction);
-        let xs = cyl.local_intersect(&r);
+        let xs = cyl.local_intersect(&r, &dummy_node);
         assert_eq!(2, xs.len());
         assert_eq!(4.0, xs[0].t);
         assert_eq!(6.0, xs[1].t);
@@ -201,7 +197,7 @@ mod tests {
         let mut direction = Vector3D::new(0.1, 1.0, 1.0);
         direction.normalize();
         let r = Ray::new(Point3D::new(0.5, 0.0, -5.0), direction);
-        let xs = cyl.local_intersect(&r);
+        let xs = cyl.local_intersect(&r, &dummy_node);
         assert_eq!(2, xs.len());
         assert!(approx_eq(6.80798, xs[0].t));
         assert!(approx_eq(7.08872, xs[1].t));
@@ -241,6 +237,8 @@ mod tests {
 
     #[test]
     fn intersecting_a_constrained_cylinder() {
+        let dummy_node = Node::new(Box::new(Cylinder::new()));
+
         let mut cyl = Cylinder::new();
         *cyl.minimum_mut() = 1.0;
         *cyl.maximum_mut() = 2.0;
@@ -248,42 +246,44 @@ mod tests {
         let mut direction = Vector3D::new(0.1, 1.0, 0.0);
         direction.normalize();
         let r = Ray::new(Point3D::new(0.0, 1.5, 0.0), direction);
-        let xs = cyl.local_intersect(&r);
+        let xs = cyl.local_intersect(&r, &dummy_node);
         assert_eq!(0, xs.len());
 
         let mut direction = Vector3D::new(0.0, 0.0, 1.0);
         direction.normalize();
         let r = Ray::new(Point3D::new(0.0, 3.0, -5.0), direction);
-        let xs = cyl.local_intersect(&r);
+        let xs = cyl.local_intersect(&r, &dummy_node);
         assert_eq!(0, xs.len());
 
         let mut direction = Vector3D::new(0.0, 0.0, 1.0);
         direction.normalize();
         let r = Ray::new(Point3D::new(0.0, 0.0, -5.0), direction);
-        let xs = cyl.local_intersect(&r);
+        let xs = cyl.local_intersect(&r, &dummy_node);
         assert_eq!(0, xs.len());
 
         let mut direction = Vector3D::new(0.0, 0.0, 1.0);
         direction.normalize();
         let r = Ray::new(Point3D::new(0.0, 2.0, -5.0), direction);
-        let xs = cyl.local_intersect(&r);
+        let xs = cyl.local_intersect(&r, &dummy_node);
         assert_eq!(0, xs.len());
 
         let mut direction = Vector3D::new(0.0, 0.0, 1.0);
         direction.normalize();
         let r = Ray::new(Point3D::new(0.0, 1.0, -5.0), direction);
-        let xs = cyl.local_intersect(&r);
+        let xs = cyl.local_intersect(&r, &dummy_node);
         assert_eq!(0, xs.len());
 
         let mut direction = Vector3D::new(0.0, 0.0, 1.0);
         direction.normalize();
         let r = Ray::new(Point3D::new(0.0, 1.5, -2.0), direction);
-        let xs = cyl.local_intersect(&r);
+        let xs = cyl.local_intersect(&r, &dummy_node);
         assert_eq!(2, xs.len());
     }
 
     #[test]
     fn intersecting_the_caps_of_a_closed_cylinder() {
+        let dummy_node = Node::new(Box::new(Cylinder::new()));
+
         let mut cyl = Cylinder::new();
         *cyl.minimum_mut() = 1.0;
         *cyl.maximum_mut() = 2.0;
@@ -292,31 +292,31 @@ mod tests {
         let mut direction = Vector3D::new(0.0, -1.0, 0.0);
         direction.normalize();
         let r = Ray::new(Point3D::new(0.0, 3.0, 0.0), direction);
-        let xs = cyl.local_intersect(&r);
+        let xs = cyl.local_intersect(&r, &dummy_node);
         assert_eq!(2, xs.len());
 
         let mut direction = Vector3D::new(0.0, -1.0, 2.0);
         direction.normalize();
         let r = Ray::new(Point3D::new(0.0, 3.0, -2.0), direction);
-        let xs = cyl.local_intersect(&r);
+        let xs = cyl.local_intersect(&r, &dummy_node);
         assert_eq!(2, xs.len());
 
         let mut direction = Vector3D::new(0.0, -1.0, 1.0);
         direction.normalize();
         let r = Ray::new(Point3D::new(0.0, 4.0, -2.0), direction);
-        let xs = cyl.local_intersect(&r);
+        let xs = cyl.local_intersect(&r, &dummy_node);
         assert_eq!(2, xs.len());
 
         let mut direction = Vector3D::new(0.0, 1.0, 2.0);
         direction.normalize();
         let r = Ray::new(Point3D::new(0.0, 0.0, -2.0), direction);
-        let xs = cyl.local_intersect(&r);
+        let xs = cyl.local_intersect(&r, &dummy_node);
         assert_eq!(2, xs.len());
 
         let mut direction = Vector3D::new(0.0, 1.0, 1.0);
         direction.normalize();
         let r = Ray::new(Point3D::new(0.0, -1.0, -2.0), direction);
-        let xs = cyl.local_intersect(&r);
+        let xs = cyl.local_intersect(&r, &dummy_node);
         assert_eq!(2, xs.len());
     }
 

@@ -1,6 +1,6 @@
 use super::{
-    color::Color, light::Light, pattern::Pattern, point3d::Point3D,
-    shape::Shape, vector3d::Vector3D, FLOAT,
+    color::Color, light::Light, node::Node, pattern::Pattern, point3d::Point3D,
+    vector3d::Vector3D, FLOAT,
 };
 
 /// マテリアル
@@ -63,7 +63,7 @@ impl Material {
     /// * `in_shadow` - 影の中にいるか
     pub fn lighting(
         &self,
-        object: &dyn Shape,
+        object: &Node,
         light: &Light,
         point: &Point3D,
         eyev: &Vector3D,
@@ -125,7 +125,7 @@ mod tests {
     #[test]
     fn lihgting_with_the_eye_between_the_light_and_the_surface() {
         let m = Material::new();
-        let object = Sphere::new();
+        let object = Node::new(Box::new(Sphere::new()));
         let p = Point3D::new(0.0, 0.0, 0.0);
         let eyev = Vector3D::new(0.0, 0.0, -1.0);
         let normalv = Vector3D::new(0.0, 0.0, -1.0);
@@ -138,7 +138,7 @@ mod tests {
     #[test]
     fn lighting_with_the_eye_between_light_and_surface_eye_offset_45deg() {
         let m = Material::new();
-        let object = Sphere::new();
+        let object = Node::new(Box::new(Sphere::new()));
         let p = Point3D::new(0.0, 0.0, 0.0);
         let eyev = Vector3D::new(
             0.0,
@@ -155,7 +155,7 @@ mod tests {
     #[test]
     fn lighting_with_eye_opposite_surface_light_offset_45deg() {
         let m = Material::new();
-        let object = Sphere::new();
+        let object = Node::new(Box::new(Sphere::new()));
         let p = Point3D::new(0.0, 0.0, 0.0);
         let eyev = Vector3D::new(0.0, 0.0, -1.0);
         let normalv = Vector3D::new(0.0, 0.0, -1.0);
@@ -168,7 +168,7 @@ mod tests {
     #[test]
     fn lighting_with_eye_in_the_path_of_the_reflection_vector() {
         let m = Material::new();
-        let object = Sphere::new();
+        let object = Node::new(Box::new(Sphere::new()));
         let p = Point3D::new(0.0, 0.0, 0.0);
         let eyev = Vector3D::new(
             0.0,
@@ -185,7 +185,7 @@ mod tests {
     #[test]
     fn lighting_with_the_light_behind_the_surface() {
         let m = Material::new();
-        let object = Sphere::new();
+        let object = Node::new(Box::new(Sphere::new()));
         let p = Point3D::new(0.0, 0.0, 0.0);
         let eyev = Vector3D::new(0.0, 0.0, -1.0);
         let normalv = Vector3D::new(0.0, 0.0, -1.0);
@@ -198,7 +198,7 @@ mod tests {
     #[test]
     fn lighting_with_the_surface_in_shadow() {
         let m = Material::new();
-        let object = Sphere::new();
+        let object = Node::new(Box::new(Sphere::new()));
         let p = Point3D::new(0.0, 0.0, 0.0);
         let eyev = Vector3D::new(0.0, 0.0, -1.0);
         let normalv = Vector3D::new(0.0, 0.0, -1.0);
@@ -213,7 +213,7 @@ mod tests {
     #[test]
     fn lighting_with_a_pattern_applied() {
         let mut m = Material::new();
-        let object = Sphere::new();
+        let object = Node::new(Box::new(Sphere::new()));
         *m.pattern_mut() =
             Some(Box::new(StripePattern::new(Color::WHITE, Color::BLACK)));
         m.ambient = 1.0;

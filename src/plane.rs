@@ -1,12 +1,10 @@
 use super::{
-    intersection::Intersection, material::Material, point3d::Point3D, ray::Ray,
-    shape::Shape, transform::Transform, vector3d::Vector3D, EPSILON,
+    intersection::Intersection, material::Material, node::Node,
+    point3d::Point3D, ray::Ray, shape::Shape, vector3d::Vector3D, EPSILON,
 };
 
 #[derive(Debug)]
 pub struct Plane {
-    /// Local-World 変換
-    transform: Transform,
     /// マテリアル
     material: Material,
 }
@@ -15,21 +13,12 @@ impl Plane {
     /// 新規に Plane を作成する
     pub fn new() -> Self {
         Plane {
-            transform: Transform::identity(),
             material: Material::new(),
         }
     }
 }
 
 impl Shape for Plane {
-    fn transform(&self) -> &Transform {
-        &self.transform
-    }
-
-    fn transform_mut(&mut self) -> &mut Transform {
-        &mut self.transform
-    }
-
     fn material(&self) -> &Material {
         &self.material
     }
@@ -38,13 +27,17 @@ impl Shape for Plane {
         &mut self.material
     }
 
-    fn local_intersect(&self, r: &Ray) -> Vec<Intersection> {
+    fn local_intersect<'a>(
+        &self,
+        r: &Ray,
+        n: &'a Node,
+    ) -> Vec<Intersection<'a>> {
         if r.direction().y.abs() < EPSILON {
             return vec![];
         }
 
         let t = -r.origin().y / r.direction().y;
-        vec![Intersection { t, object: self }]
+        vec![Intersection { t, object: n }]
     }
 
     fn local_normal_at(&self, _: &Point3D) -> Vector3D {
@@ -70,59 +63,61 @@ mod tests {
 
     #[test]
     fn intersect_with_a_ray_parallel_to_the_plane() {
+        let dummy_node = Node::new(Box::new(Plane::new()));
+
         let p = Plane::new();
         let r = Ray::new(
             Point3D::new(0.0, 10.0, 0.0),
             Vector3D::new(0.0, 0.0, 1.0),
         );
 
-        let xs = p.local_intersect(&r);
+        let xs = p.local_intersect(&r, &dummy_node);
         assert_eq!(0, xs.len());
     }
 
     #[test]
     fn intersect_with_a_coplanar_ray() {
+        let dummy_node = Node::new(Box::new(Plane::new()));
+
         let p = Plane::new();
         let r = Ray::new(
             Point3D::new(0.0, 00.0, 0.0),
             Vector3D::new(0.0, 0.0, 1.0),
         );
 
-        let xs = p.local_intersect(&r);
+        let xs = p.local_intersect(&r, &dummy_node);
         assert_eq!(0, xs.len());
     }
 
     #[test]
     fn a_ray_intersecting_a_plane_from_above() {
+        let dummy_node = Node::new(Box::new(Plane::new()));
+
         let p = Plane::new();
         let r = Ray::new(
             Point3D::new(0.0, 1.0, 0.0),
             Vector3D::new(0.0, -1.0, 0.0),
         );
 
-        let xs = p.local_intersect(&r);
+        let xs = p.local_intersect(&r, &*dummy_node);
         assert_eq!(1, xs.len());
         assert_eq!(1.0, xs[0].t);
-        assert!(std::ptr::eq(
-            xs[0].object as *const _ as *const (),
-            &p as *const _ as *const ()
-        ));
+        assert!(std::ptr::eq(xs[0].object, &*dummy_node));
     }
 
     #[test]
     fn a_ray_intersecting_a_plane_from_below() {
+        let dummy_node = Node::new(Box::new(Plane::new()));
+
         let p = Plane::new();
         let r = Ray::new(
             Point3D::new(0.0, -1.0, 0.0),
             Vector3D::new(0.0, 1.0, 0.0),
         );
 
-        let xs = p.local_intersect(&r);
+        let xs = p.local_intersect(&r, &*dummy_node);
         assert_eq!(1, xs.len());
         assert_eq!(1.0, xs[0].t);
-        assert!(std::ptr::eq(
-            xs[0].object as *const _ as *const (),
-            &p as *const _ as *const ()
-        ));
+        assert!(std::ptr::eq(xs[0].object, &*dummy_node));
     }
 }

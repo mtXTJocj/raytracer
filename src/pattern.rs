@@ -1,6 +1,4 @@
-use super::{
-    color::Color, point3d::Point3D, shape::Shape, transform::Transform,
-};
+use super::{color::Color, node::Node, point3d::Point3D, transform::Transform};
 use std::fmt::Debug;
 
 pub trait Pattern: Debug {
@@ -18,8 +16,8 @@ pub trait Pattern: Debug {
     ///
     /// # Argumets
     /// * `p` - World 座標系における点
-    fn pattern_at_shape(&self, shape: &dyn Shape, p: &Point3D) -> Color {
-        let local_p = shape.transform().inv() * p;
+    fn pattern_at_shape(&self, node: &Node, p: &Point3D) -> Color {
+        let local_p = node.transform().inv() * p;
         let pattern_p = self.transform().inv() * &local_p;
         self.pattern_at(&pattern_p)
     }
@@ -73,21 +71,21 @@ mod tests {
 
     #[test]
     fn a_pattern_with_an_object_transformation() {
-        let mut shape = Sphere::new();
-        *shape.transform_mut() = Transform::scaling(2.0, 2.0, 2.0);
+        let mut node = Node::new(Box::new(Sphere::new()));
+        node.set_transform(Transform::scaling(2.0, 2.0, 2.0));
         let pattern = TestPattern::new();
-        let c = pattern.pattern_at_shape(&shape, &Point3D::new(2.0, 3.0, 4.0));
+        let c = pattern.pattern_at_shape(&node, &Point3D::new(2.0, 3.0, 4.0));
 
         assert_eq!(Color::new(1.0, 1.5, 2.0), c);
     }
 
     #[test]
     fn a_pattern_with_both_an_object_and_a_pattern_transformation() {
-        let mut shape = Sphere::new();
-        *shape.transform_mut() = Transform::scaling(2.0, 2.0, 2.0);
+        let mut node = Node::new(Box::new(Sphere::new()));
+        node.set_transform(Transform::scaling(2.0, 2.0, 2.0));
         let mut pattern = TestPattern::new();
         *pattern.transform_mut() = Transform::translation(0.5, 1.0, 1.5);
-        let c = pattern.pattern_at_shape(&shape, &Point3D::new(2.5, 3.0, 3.5));
+        let c = pattern.pattern_at_shape(&node, &Point3D::new(2.5, 3.0, 3.5));
 
         assert_eq!(Color::new(0.75, 0.5, 0.25), c);
     }

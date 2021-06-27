@@ -1,14 +1,12 @@
 use super::{
-    intersection::Intersection, material::Material, point3d::Point3D, ray::Ray,
-    shape::Shape, transform::Transform, vector3d::Vector3D, EPSILON, FLOAT,
-    INFINITY,
+    intersection::Intersection, material::Material, node::Node,
+    point3d::Point3D, ray::Ray, shape::Shape, vector3d::Vector3D, EPSILON,
+    FLOAT, INFINITY,
 };
 
 /// Axis Aligned な cube
 #[derive(Debug)]
 pub struct Cube {
-    /// Cube に対して適用する変換
-    transform: Transform,
     material: Material,
 }
 
@@ -17,21 +15,12 @@ impl Cube {
     /// Cube は中心を原点とする Axis-Aligned Box で、各軸 1, -1 に面が存在する
     pub fn new() -> Self {
         Cube {
-            transform: Transform::identity(),
             material: Material::new(),
         }
     }
 }
 
 impl Shape for Cube {
-    fn transform(&self) -> &Transform {
-        &self.transform
-    }
-
-    fn transform_mut(&mut self) -> &mut Transform {
-        &mut self.transform
-    }
-
     fn material(&self) -> &Material {
         &self.material
     }
@@ -40,7 +29,11 @@ impl Shape for Cube {
         &mut self.material
     }
 
-    fn local_intersect(&self, r: &Ray) -> Vec<Intersection> {
+    fn local_intersect<'a>(
+        &'a self,
+        r: &Ray,
+        n: &'a Node,
+    ) -> Vec<Intersection<'a>> {
         /// Ray の各軸の面との交点となる t を求める。
         ///
         /// # Argumets
@@ -82,14 +75,8 @@ impl Shape for Cube {
             vec![]
         } else {
             vec![
-                Intersection {
-                    t: tmin,
-                    object: self,
-                },
-                Intersection {
-                    t: tmax,
-                    object: self,
-                },
+                Intersection { t: tmin, object: n },
+                Intersection { t: tmax, object: n },
             ]
         }
     }
@@ -113,13 +100,15 @@ mod tests {
 
     #[test]
     fn a_ray_intersects_a_cube() {
+        let dummy_node = Node::new(Box::new(Cube::new()));
+
         let c = Cube::new();
 
         // +x
         let origin = Point3D::new(5.0, 0.5, 0.0);
         let direction = Vector3D::new(-1.0, 0.0, 0.0);
         let r = Ray::new(origin, direction);
-        let xs = c.local_intersect(&r);
+        let xs = c.local_intersect(&r, &dummy_node);
         assert_eq!(2, xs.len());
         assert_eq!(4.0, xs[0].t);
         assert_eq!(6.0, xs[1].t);
@@ -128,7 +117,7 @@ mod tests {
         let origin = Point3D::new(-5.0, 0.5, 0.0);
         let direction = Vector3D::new(1.0, 0.0, 0.0);
         let r = Ray::new(origin, direction);
-        let xs = c.local_intersect(&r);
+        let xs = c.local_intersect(&r, &dummy_node);
         assert_eq!(2, xs.len());
         assert_eq!(4.0, xs[0].t);
         assert_eq!(6.0, xs[1].t);
@@ -137,7 +126,7 @@ mod tests {
         let origin = Point3D::new(0.5, 5.0, 0.0);
         let direction = Vector3D::new(0.0, -1.0, 0.0);
         let r = Ray::new(origin, direction);
-        let xs = c.local_intersect(&r);
+        let xs = c.local_intersect(&r, &dummy_node);
         assert_eq!(2, xs.len());
         assert_eq!(4.0, xs[0].t);
         assert_eq!(6.0, xs[1].t);
@@ -146,7 +135,7 @@ mod tests {
         let origin = Point3D::new(0.5, -5.0, 0.0);
         let direction = Vector3D::new(0.0, 1.0, 0.0);
         let r = Ray::new(origin, direction);
-        let xs = c.local_intersect(&r);
+        let xs = c.local_intersect(&r, &dummy_node);
         assert_eq!(2, xs.len());
         assert_eq!(4.0, xs[0].t);
         assert_eq!(6.0, xs[1].t);
@@ -155,7 +144,7 @@ mod tests {
         let origin = Point3D::new(0.5, 0.0, 5.0);
         let direction = Vector3D::new(0.0, 0.0, -1.0);
         let r = Ray::new(origin, direction);
-        let xs = c.local_intersect(&r);
+        let xs = c.local_intersect(&r, &dummy_node);
         assert_eq!(2, xs.len());
         assert_eq!(4.0, xs[0].t);
         assert_eq!(6.0, xs[1].t);
@@ -164,7 +153,7 @@ mod tests {
         let origin = Point3D::new(0.5, 0.0, -5.0);
         let direction = Vector3D::new(0.0, 0.0, 1.0);
         let r = Ray::new(origin, direction);
-        let xs = c.local_intersect(&r);
+        let xs = c.local_intersect(&r, &dummy_node);
         assert_eq!(2, xs.len());
         assert_eq!(4.0, xs[0].t);
         assert_eq!(6.0, xs[1].t);
@@ -173,7 +162,7 @@ mod tests {
         let origin = Point3D::new(0.0, 0.5, 0.0);
         let direction = Vector3D::new(0.0, 0.0, 1.0);
         let r = Ray::new(origin, direction);
-        let xs = c.local_intersect(&r);
+        let xs = c.local_intersect(&r, &dummy_node);
         assert_eq!(2, xs.len());
         assert_eq!(-1.0, xs[0].t);
         assert_eq!(1.0, xs[1].t);
@@ -181,42 +170,44 @@ mod tests {
 
     #[test]
     fn a_ray_misses_a_cube() {
+        let dummy_node = Node::new(Box::new(Cube::new()));
+
         let c = Cube::new();
 
         let origin = Point3D::new(-2.0, 0.0, 0.0);
         let direction = Vector3D::new(0.2673, 0.5345, 0.8018);
         let r = Ray::new(origin, direction);
-        let xs = c.local_intersect(&r);
+        let xs = c.local_intersect(&r, &dummy_node);
         assert_eq!(0, xs.len());
 
         let origin = Point3D::new(0.0, -2.0, 0.0);
         let direction = Vector3D::new(0.8018, 0.2673, 0.5345);
         let r = Ray::new(origin, direction);
-        let xs = c.local_intersect(&r);
+        let xs = c.local_intersect(&r, &dummy_node);
         assert_eq!(0, xs.len());
 
         let origin = Point3D::new(0.0, 0.0, -2.0);
         let direction = Vector3D::new(0.5345, 0.8018, 0.2673);
         let r = Ray::new(origin, direction);
-        let xs = c.local_intersect(&r);
+        let xs = c.local_intersect(&r, &dummy_node);
         assert_eq!(0, xs.len());
 
         let origin = Point3D::new(2.0, 0.0, 2.0);
         let direction = Vector3D::new(0.0, 0.0, -1.0);
         let r = Ray::new(origin, direction);
-        let xs = c.local_intersect(&r);
+        let xs = c.local_intersect(&r, &dummy_node);
         assert_eq!(0, xs.len());
 
         let origin = Point3D::new(0.0, 2.0, 2.0);
         let direction = Vector3D::new(0.0, -1.0, 0.0);
         let r = Ray::new(origin, direction);
-        let xs = c.local_intersect(&r);
+        let xs = c.local_intersect(&r, &dummy_node);
         assert_eq!(0, xs.len());
 
         let origin = Point3D::new(2.0, 2.0, 0.0);
         let direction = Vector3D::new(-1.0, 0.0, 0.0);
         let r = Ray::new(origin, direction);
-        let xs = c.local_intersect(&r);
+        let xs = c.local_intersect(&r, &dummy_node);
         assert_eq!(0, xs.len());
     }
 
