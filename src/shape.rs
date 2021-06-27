@@ -5,6 +5,10 @@ use super::{
 use std::fmt::Debug;
 
 pub trait Shape: Debug {
+    /// 子 Node を追加する
+    ///
+    /// # Argumets
+    /// * `child` - 追加する Node
     fn add_child(&mut self, _child: Box<Node>) {
         panic!();
     }

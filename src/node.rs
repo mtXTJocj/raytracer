@@ -6,12 +6,19 @@ use std::ptr::NonNull;
 
 #[derive(Debug)]
 pub struct Node {
+    /// 親 Node
     parent: Option<NonNull<Node>>,
+    /// 親 Node の座標系への変換
     transform: Transform,
+    /// 本体
     shape: Box<dyn Shape>,
 }
 
 impl Node {
+    /// 新規に Node を作成する
+    ///
+    /// # Argumets
+    /// * `shape` - この Node 固有の性質となる Shape
     pub fn new(shape: Box<dyn Shape>) -> Box<Self> {
         Box::new(Node {
             parent: None,
@@ -20,19 +27,32 @@ impl Node {
         })
     }
 
+    /// 子 Node を追加する
+    ///
+    /// # Argumets
+    /// * `child` - 追加する Node
     pub fn add_child(&mut self, mut child: Box<Node>) {
         child.parent = NonNull::new(&mut *self);
         self.shape.add_child(child);
     }
 
+    /// 親 Node の座標系への変換を取得する
     pub fn transform(&self) -> &Transform {
         &self.transform
     }
 
+    /// 親 Node の座標系への変換を設定する
+    ///
+    /// # Argumets
+    /// * `transform` - 設定する Transform
     pub fn set_transform(&mut self, transform: Transform) {
         self.transform = transform;
     }
 
+    /// World 座表系の点 p から self の local 座標系の点を求める
+    ///
+    /// # Argumets
+    /// * `p` - World 座表系の点 p
     pub(crate) fn world_to_object(&self, p: &Point3D) -> Point3D {
         match self.parent {
             None => self.transform().inv() * p,
@@ -42,6 +62,10 @@ impl Node {
         }
     }
 
+    /// local 座表系の法線ベクトル n から World 座標系の法線ベクトルを求める
+    ///
+    /// # Argumets
+    /// * `p` - World 座表系の点 p
     pub(crate) fn normal_to_world(&self, n: &Vector3D) -> Vector3D {
         match self.parent {
             None => self.transform.apply_to_normal(n),

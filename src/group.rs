@@ -5,10 +5,12 @@ use crate::{
 
 #[derive(Debug)]
 pub struct Group {
+    /// 子 Node
     children: Vec<Box<Node>>,
 }
 
 impl Group {
+    /// 新規に Group を作成する
     pub fn new() -> Self {
         Group { children: vec![] }
     }
