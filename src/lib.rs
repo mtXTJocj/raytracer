@@ -20,6 +20,7 @@ pub mod point3d;
 pub mod ray;
 pub mod ring_pattern;
 pub mod shape;
+pub mod smooth_triangle;
 pub mod sphere;
 pub mod stripe_pattern;
 pub mod transform;
