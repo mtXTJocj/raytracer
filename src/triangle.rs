@@ -81,7 +81,12 @@ impl Shape for Triangle {
         }
 
         let t = f * self.e2.dot(&origin_cross_e1);
-        vec![Intersection { t: t, object: n }]
+        vec![Intersection {
+            t: t,
+            object: n,
+            u: 0.0,
+            v: 0.0,
+        }]
     }
 
     fn local_normal_at(&self, _p: &Point3D) -> Vector3D {

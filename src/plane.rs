@@ -37,7 +37,12 @@ impl Shape for Plane {
         }
 
         let t = -r.origin().y / r.direction().y;
-        vec![Intersection { t, object: n }]
+        vec![Intersection {
+            t,
+            object: n,
+            u: 0.0,
+            v: 0.0,
+        }]
     }
 
     fn local_normal_at(&self, _: &Point3D) -> Vector3D {

@@ -75,14 +75,24 @@ impl Cone {
         // by intersecting the ray with the plane at y = cyl.minimum
         let t = (self.minimum() - r.origin().y) / r.direction().y;
         if check_cap(&r, t) {
-            xs.push(Intersection { t: t, object: n });
+            xs.push(Intersection {
+                t: t,
+                object: n,
+                u: 0.0,
+                v: 0.0,
+            });
         }
 
         // check for an intersection with the upper end cap
         // by intersecting the ray with the plane at y = cyl.maximum
         let t = (self.maximum() - r.origin().y) / r.direction().y;
         if check_cap(&r, t) {
-            xs.push(Intersection { t: t, object: n });
+            xs.push(Intersection {
+                t: t,
+                object: n,
+                u: 0.0,
+                v: 0.0,
+            });
         }
     }
 }
@@ -111,7 +121,12 @@ impl Shape for Cone {
         if approx_eq(0.0, a) {
             if !approx_eq(0.0, b) {
                 let t = -c / (2.0 * b);
-                xs.push(Intersection { t: t, object: n });
+                xs.push(Intersection {
+                    t: t,
+                    object: n,
+                    u: 0.0,
+                    v: 0.0,
+                });
             }
         } else {
             let disc = b * b - 4.0 * a * c;
@@ -124,11 +139,21 @@ impl Shape for Cone {
 
                 let y0 = o.y + t0 * d.y;
                 if self.minimum() < y0 && y0 < self.maximum() {
-                    xs.push(Intersection { t: t0, object: n });
+                    xs.push(Intersection {
+                        t: t0,
+                        object: n,
+                        u: 0.0,
+                        v: 0.0,
+                    });
                 }
                 let y1 = o.y + t1 * d.y;
                 if self.minimum() < y1 && y1 < self.maximum() {
-                    xs.push(Intersection { t: t1, object: n });
+                    xs.push(Intersection {
+                        t: t1,
+                        object: n,
+                        u: 0.0,
+                        v: 0.0,
+                    });
                 }
             }
         }

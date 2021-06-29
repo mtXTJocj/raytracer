@@ -75,8 +75,18 @@ impl Shape for Cube {
             vec![]
         } else {
             vec![
-                Intersection { t: tmin, object: n },
-                Intersection { t: tmax, object: n },
+                Intersection {
+                    t: tmin,
+                    object: n,
+                    u: 0.0,
+                    v: 0.0,
+                },
+                Intersection {
+                    t: tmax,
+                    object: n,
+                    u: 0.0,
+                    v: 0.0,
+                },
             ]
         }
     }

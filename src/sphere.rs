@@ -50,8 +50,18 @@ impl Shape for Sphere {
         let t2 = (-b + discriminant.sqrt()) / (2.0 * a);
 
         return vec![
-            Intersection { t: t1, object: n },
-            Intersection { t: t2, object: n },
+            Intersection {
+                t: t1,
+                object: n,
+                u: 0.0,
+                v: 0.0,
+            },
+            Intersection {
+                t: t2,
+                object: n,
+                u: 0.0,
+                v: 0.0,
+            },
         ];
     }
 
