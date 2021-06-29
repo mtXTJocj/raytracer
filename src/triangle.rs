@@ -15,7 +15,7 @@ pub struct Triangle {
 }
 
 impl Triangle {
-    /// 新規に Cylinder を作成する
+    /// 新規に Triangle を作成する
     pub fn new(p1: Point3D, p2: Point3D, p3: Point3D) -> Self {
         let e1 = &p2 - &p1;
         let e2 = &p3 - &p1;
