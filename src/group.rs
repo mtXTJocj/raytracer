@@ -54,7 +54,7 @@ impl Shape for Group {
         xs
     }
 
-    fn local_normal_at(&self, _p: &Point3D) -> Vector3D {
+    fn local_normal_at(&self, _p: &Point3D, _: &Intersection) -> Vector3D {
         panic!()
     }
 }
@@ -206,10 +206,15 @@ mod tests {
         g1.add_child(g2);
 
         let n = unsafe {
-            s_ptr
-                .as_ref()
-                .unwrap()
-                .normal_at(&Point3D::new(1.7321, 1.1547, -5.5774))
+            s_ptr.as_ref().unwrap().normal_at(
+                &Point3D::new(1.7321, 1.1547, -5.5774),
+                &Intersection {
+                    t: 0.0,
+                    object: &g1,
+                    u: 0.0,
+                    v: 0.0,
+                },
+            )
         };
         assert_eq!(Vector3D::new(0.2857, 0.428543, -0.85716), n)
     }

@@ -65,7 +65,7 @@ impl Shape for Sphere {
         ];
     }
 
-    fn local_normal_at(&self, p: &Point3D) -> Vector3D {
+    fn local_normal_at(&self, p: &Point3D, _: &Intersection) -> Vector3D {
         Vector3D::new(p.x, p.y, p.z)
     }
 }
@@ -207,7 +207,15 @@ mod tests {
     #[test]
     fn the_normal_on_a_sphere_at_a_point_on_the_x_axis() {
         let s = Node::new(Box::new(Sphere::new()));
-        let n = s.normal_at(&Point3D::new(1.0, 0.0, 0.0));
+        let n = s.normal_at(
+            &Point3D::new(1.0, 0.0, 0.0),
+            &Intersection {
+                t: 0.0,
+                object: &s,
+                u: 0.0,
+                v: 0.0,
+            },
+        );
 
         assert_eq!(Vector3D::new(1.0, 0.0, 0.0), n);
     }
@@ -215,7 +223,15 @@ mod tests {
     #[test]
     fn the_normal_on_a_sphere_at_a_point_on_the_y_axis() {
         let s = Node::new(Box::new(Sphere::new()));
-        let n = s.normal_at(&Point3D::new(0.0, 1.0, 0.0));
+        let n = s.normal_at(
+            &Point3D::new(0.0, 1.0, 0.0),
+            &Intersection {
+                t: 0.0,
+                object: &s,
+                u: 0.0,
+                v: 0.0,
+            },
+        );
 
         assert_eq!(Vector3D::new(0.0, 1.0, 0.0), n);
     }
@@ -223,7 +239,15 @@ mod tests {
     #[test]
     fn the_normal_on_a_sphere_at_a_point_on_the_z_axis() {
         let s = Node::new(Box::new(Sphere::new()));
-        let n = s.normal_at(&Point3D::new(0.0, 0.0, 1.0));
+        let n = s.normal_at(
+            &Point3D::new(0.0, 0.0, 1.0),
+            &Intersection {
+                t: 0.0,
+                object: &s,
+                u: 0.0,
+                v: 0.0,
+            },
+        );
 
         assert_eq!(Vector3D::new(0.0, 0.0, 1.0), n);
     }
@@ -231,11 +255,19 @@ mod tests {
     #[test]
     fn the_normal_on_a_sphere_at_a_nonaxial_point() {
         let s = Node::new(Box::new(Sphere::new()));
-        let n = s.normal_at(&Point3D::new(
-            3f32.sqrt() as FLOAT / 3.0,
-            3f32.sqrt() as FLOAT / 3.0,
-            3f32.sqrt() as FLOAT / 3.0,
-        ));
+        let n = s.normal_at(
+            &Point3D::new(
+                3f32.sqrt() as FLOAT / 3.0,
+                3f32.sqrt() as FLOAT / 3.0,
+                3f32.sqrt() as FLOAT / 3.0,
+            ),
+            &Intersection {
+                t: 0.0,
+                object: &s,
+                u: 0.0,
+                v: 0.0,
+            },
+        );
 
         assert_eq!(
             Vector3D::new(
@@ -250,18 +282,34 @@ mod tests {
     #[test]
     fn the_normal_is_a_normalized_vector() {
         let s = Node::new(Box::new(Sphere::new()));
-        let mut n = s.normal_at(&Point3D::new(
-            3f32.sqrt() as FLOAT / 3.0,
-            3f32.sqrt() as FLOAT / 3.0,
-            3f32.sqrt() as FLOAT / 3.0,
-        ));
+        let mut n = s.normal_at(
+            &Point3D::new(
+                3f32.sqrt() as FLOAT / 3.0,
+                3f32.sqrt() as FLOAT / 3.0,
+                3f32.sqrt() as FLOAT / 3.0,
+            ),
+            &Intersection {
+                t: 0.0,
+                object: &s,
+                u: 0.0,
+                v: 0.0,
+            },
+        );
 
         assert_eq!(
-            s.normal_at(&Point3D::new(
-                3f32.sqrt() as FLOAT / 3.0,
-                3f32.sqrt() as FLOAT / 3.0,
-                3f32.sqrt() as FLOAT / 3.0
-            )),
+            s.normal_at(
+                &Point3D::new(
+                    3f32.sqrt() as FLOAT / 3.0,
+                    3f32.sqrt() as FLOAT / 3.0,
+                    3f32.sqrt() as FLOAT / 3.0
+                ),
+                &Intersection {
+                    t: 0.0,
+                    object: &s,
+                    u: 0.0,
+                    v: 0.0,
+                },
+            ),
             *n.normalize()
         );
     }
@@ -271,7 +319,15 @@ mod tests {
         let mut s = Node::new(Box::new(Sphere::new()));
         s.set_transform(Transform::translation(0.0, 1.0, 0.0));
 
-        let n = s.normal_at(&Point3D::new(0.0, 1.70711, -0.70711));
+        let n = s.normal_at(
+            &Point3D::new(0.0, 1.70711, -0.70711),
+            &Intersection {
+                t: 0.0,
+                object: &s,
+                u: 0.0,
+                v: 0.0,
+            },
+        );
         assert_eq!(Vector3D::new(0.0, 0.70711, -0.70711), n);
     }
 
@@ -283,11 +339,19 @@ mod tests {
                 * &Transform::rotation_z(std::f32::consts::PI as FLOAT / 5.0),
         );
 
-        let n = s.normal_at(&Point3D::new(
-            0.0,
-            2f32.sqrt() as FLOAT / 2.0,
-            -2f32.sqrt() as FLOAT / 2.0,
-        ));
+        let n = s.normal_at(
+            &Point3D::new(
+                0.0,
+                2f32.sqrt() as FLOAT / 2.0,
+                -2f32.sqrt() as FLOAT / 2.0,
+            ),
+            &Intersection {
+                t: 0.0,
+                object: &s,
+                u: 0.0,
+                v: 0.0,
+            },
+        );
         assert_eq!(Vector3D::new(0.0, 0.97014, -0.24254), n);
     }
 

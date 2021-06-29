@@ -162,7 +162,7 @@ impl Shape for Cone {
         xs
     }
 
-    fn local_normal_at(&self, p: &Point3D) -> Vector3D {
+    fn local_normal_at(&self, p: &Point3D, _: &Intersection) -> Vector3D {
         let mut y = (p.x * p.x + p.z * p.z).sqrt();
         if y < 0.0 {
             y = -y;
@@ -257,14 +257,20 @@ mod tests {
     #[test]
     fn computing_the_normal_vector_on_a_cone() {
         let shape = Cone::new();
+        let i = Intersection {
+            t: 0.0,
+            object: &Node::new(Box::new(Cone::new())),
+            u: 0.0,
+            v: 0.0,
+        };
 
-        let n = shape.local_normal_at(&Point3D::new(0.0, 0.0, 0.0));
+        let n = shape.local_normal_at(&Point3D::new(0.0, 0.0, 0.0), &i);
         assert_eq!(Vector3D::new(0.0, 0.0, 0.0), n);
 
-        let n = shape.local_normal_at(&Point3D::new(1.0, 1.0, 1.0));
+        let n = shape.local_normal_at(&Point3D::new(1.0, 1.0, 1.0), &i);
         assert_eq!(Vector3D::new(1.0, 2f64.sqrt() as FLOAT, 1.0), n);
 
-        let n = shape.local_normal_at(&Point3D::new(-1.0, -1.0, 0.0));
+        let n = shape.local_normal_at(&Point3D::new(-1.0, -1.0, 0.0), &i);
         assert_eq!(Vector3D::new(-1.0, 1.0, 0.0), n);
     }
 
@@ -274,23 +280,29 @@ mod tests {
         *shape.minimum_mut() = -1.0;
         *shape.maximum_mut() = 2.0;
         *shape.closed_mut() = true;
+        let i = Intersection {
+            t: 0.0,
+            object: &Node::new(Box::new(Cone::new())),
+            u: 0.0,
+            v: 0.0,
+        };
 
-        let n = shape.local_normal_at(&Point3D::new(0.0, -1.0, 0.0));
+        let n = shape.local_normal_at(&Point3D::new(0.0, -1.0, 0.0), &i);
         assert_eq!(Vector3D::new(0.0, -1.0, 0.0), n);
 
-        let n = shape.local_normal_at(&Point3D::new(0.9, -1.0, 0.0));
+        let n = shape.local_normal_at(&Point3D::new(0.9, -1.0, 0.0), &i);
         assert_eq!(Vector3D::new(0.0, -1.0, 0.0), n);
 
-        let n = shape.local_normal_at(&Point3D::new(0.0, -1.0, 0.9));
+        let n = shape.local_normal_at(&Point3D::new(0.0, -1.0, 0.9), &i);
         assert_eq!(Vector3D::new(0.0, -1.0, 0.0), n);
 
-        let n = shape.local_normal_at(&Point3D::new(0.0, 2.0, 0.0));
+        let n = shape.local_normal_at(&Point3D::new(0.0, 2.0, 0.0), &i);
         assert_eq!(Vector3D::new(0.0, 1.0, 0.0), n);
 
-        let n = shape.local_normal_at(&Point3D::new(1.9, 2.0, 0.0));
+        let n = shape.local_normal_at(&Point3D::new(1.9, 2.0, 0.0), &i);
         assert_eq!(Vector3D::new(0.0, 1.0, 0.0), n);
 
-        let n = shape.local_normal_at(&Point3D::new(0.0, 2.0, 1.9));
+        let n = shape.local_normal_at(&Point3D::new(0.0, 2.0, 1.9), &i);
         assert_eq!(Vector3D::new(0.0, 1.0, 0.0), n);
     }
 }

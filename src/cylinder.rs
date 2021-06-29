@@ -151,7 +151,7 @@ impl Shape for Cylinder {
         xs
     }
 
-    fn local_normal_at(&self, p: &Point3D) -> Vector3D {
+    fn local_normal_at(&self, p: &Point3D, _: &Intersection) -> Vector3D {
         let dist = p.x * p.x + p.z * p.z;
 
         if dist < 1.0 && p.y >= self.maximum() - EPSILON {
@@ -226,17 +226,23 @@ mod tests {
     #[test]
     fn normal_vector_on_a_cylinder() {
         let cyl = Cylinder::new();
+        let i = Intersection {
+            t: 0.0,
+            object: &Node::new(Box::new(Cylinder::new())),
+            u: 0.0,
+            v: 0.0,
+        };
 
-        let n = cyl.local_normal_at(&Point3D::new(1.0, 0.0, 0.0));
+        let n = cyl.local_normal_at(&Point3D::new(1.0, 0.0, 0.0), &i);
         assert_eq!(Vector3D::new(1.0, 0.0, 0.0), n);
 
-        let n = cyl.local_normal_at(&Point3D::new(0.0, 5.0, -1.0));
+        let n = cyl.local_normal_at(&Point3D::new(0.0, 5.0, -1.0), &i);
         assert_eq!(Vector3D::new(0.0, 0.0, -1.0), n);
 
-        let n = cyl.local_normal_at(&Point3D::new(0.0, -2.0, 1.0));
+        let n = cyl.local_normal_at(&Point3D::new(0.0, -2.0, 1.0), &i);
         assert_eq!(Vector3D::new(0.0, 0.0, 1.0), n);
 
-        let n = cyl.local_normal_at(&Point3D::new(-1.0, 1.0, 0.0));
+        let n = cyl.local_normal_at(&Point3D::new(-1.0, 1.0, 0.0), &i);
         assert_eq!(Vector3D::new(-1.0, 0.0, 0.0), n);
     }
 
@@ -346,23 +352,29 @@ mod tests {
         *cyl.minimum_mut() = 1.0;
         *cyl.maximum_mut() = 2.0;
         *cyl.closed_mut() = true;
+        let i = Intersection {
+            t: 0.0,
+            object: &Node::new(Box::new(Cylinder::new())),
+            u: 0.0,
+            v: 0.0,
+        };
 
-        let n = cyl.local_normal_at(&Point3D::new(0.0, 1.0, 0.0));
+        let n = cyl.local_normal_at(&Point3D::new(0.0, 1.0, 0.0), &i);
         assert_eq!(Vector3D::new(0.0, -1.0, 0.0), n);
 
-        let n = cyl.local_normal_at(&Point3D::new(0.5, 1.0, 0.0));
+        let n = cyl.local_normal_at(&Point3D::new(0.5, 1.0, 0.0), &i);
         assert_eq!(Vector3D::new(0.0, -1.0, 0.0), n);
 
-        let n = cyl.local_normal_at(&Point3D::new(0.0, 1.0, 0.5));
+        let n = cyl.local_normal_at(&Point3D::new(0.0, 1.0, 0.5), &i);
         assert_eq!(Vector3D::new(0.0, -1.0, 0.0), n);
 
-        let n = cyl.local_normal_at(&Point3D::new(0.0, 2.0, 0.0));
+        let n = cyl.local_normal_at(&Point3D::new(0.0, 2.0, 0.0), &i);
         assert_eq!(Vector3D::new(0.0, 1.0, 0.0), n);
 
-        let n = cyl.local_normal_at(&Point3D::new(0.5, 2.0, 0.0));
+        let n = cyl.local_normal_at(&Point3D::new(0.5, 2.0, 0.0), &i);
         assert_eq!(Vector3D::new(0.0, 1.0, 0.0), n);
 
-        let n = cyl.local_normal_at(&Point3D::new(0.0, 2.0, 0.5));
+        let n = cyl.local_normal_at(&Point3D::new(0.0, 2.0, 0.5), &i);
         assert_eq!(Vector3D::new(0.0, 1.0, 0.0), n);
     }
 }

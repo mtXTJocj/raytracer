@@ -109,19 +109,23 @@ impl Shape for SmoothTriangle {
         vec![Intersection {
             t: t,
             object: n,
-            u: 0.0,
-            v: 0.0,
+            u,
+            v,
         }]
     }
 
-    fn local_normal_at(&self, _p: &Point3D) -> Vector3D {
-        self.normal.clone()
+    fn local_normal_at(&self, _: &Point3D, i: &Intersection) -> Vector3D {
+        &(&(&self.n2 * i.u) + &(&self.n3 * i.v))
+            + &(&self.n1 * (1.0 - i.u - i.v))
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::{
+        super::{approx_eq, intersection_state::IntersectionState},
+        *,
+    };
     use crate::vector3d::Vector3D;
 
     #[test]
@@ -148,5 +152,84 @@ mod tests {
         assert_eq!(n1, *t.n1());
         assert_eq!(n2, *t.n2());
         assert_eq!(n3, *t.n3());
+    }
+
+    #[test]
+    fn an_intersection_with_a_smooth_triangle_stores_uv() {
+        let p1 = Point3D::new(0.0, 1.0, 0.0);
+        let p2 = Point3D::new(-1.0, 0.0, 0.0);
+        let p3 = Point3D::new(1.0, 0.0, 0.0);
+        let n1 = Vector3D::new(0.0, 1.0, 0.0);
+        let n2 = Vector3D::new(-1.0, 0.0, 0.0);
+        let n3 = Vector3D::new(1.0, 0.0, 0.0);
+
+        let tri = SmoothTriangle::new(
+            p1.clone(),
+            p2.clone(),
+            p3.clone(),
+            n1.clone(),
+            n2.clone(),
+            n3.clone(),
+        );
+        let dummy_node =
+            Node::new(Box::new(SmoothTriangle::new(p1, p2, p3, n1, n2, n3)));
+
+        let r = Ray::new(
+            Point3D::new(-0.2, 0.3, -2.0),
+            Vector3D::new(0.0, 0.0, 1.0),
+        );
+
+        let xs = tri.local_intersect(&r, &dummy_node);
+
+        assert!(approx_eq(0.45, xs[0].u));
+        assert!(approx_eq(0.25, xs[0].v));
+    }
+
+    #[test]
+    fn a_smooth_triangle_uses_uv_to_interpolate_the_normal() {
+        let p1 = Point3D::new(0.0, 1.0, 0.0);
+        let p2 = Point3D::new(-1.0, 0.0, 0.0);
+        let p3 = Point3D::new(1.0, 0.0, 0.0);
+        let n1 = Vector3D::new(0.0, 1.0, 0.0);
+        let n2 = Vector3D::new(-1.0, 0.0, 0.0);
+        let n3 = Vector3D::new(1.0, 0.0, 0.0);
+
+        let tri =
+            Node::new(Box::new(SmoothTriangle::new(p1, p2, p3, n1, n2, n3)));
+        let i = Intersection {
+            t: 1.0,
+            object: &tri,
+            u: 0.45,
+            v: 0.25,
+        };
+
+        let n = tri.normal_at(&Point3D::new(0.0, 0.0, 0.0), &i);
+        assert_eq!(Vector3D::new(-0.5547, 0.83205, 0.0), n)
+    }
+
+    #[test]
+    fn preparing_the_normal_on_a_smooth_triangle() {
+        let p1 = Point3D::new(0.0, 1.0, 0.0);
+        let p2 = Point3D::new(-1.0, 0.0, 0.0);
+        let p3 = Point3D::new(1.0, 0.0, 0.0);
+        let n1 = Vector3D::new(0.0, 1.0, 0.0);
+        let n2 = Vector3D::new(-1.0, 0.0, 0.0);
+        let n3 = Vector3D::new(1.0, 0.0, 0.0);
+        let tri =
+            Node::new(Box::new(SmoothTriangle::new(p1, p2, p3, n1, n2, n3)));
+
+        let r = Ray::new(
+            Point3D::new(-0.2, 0.3, -2.0),
+            Vector3D::new(0.0, 0.0, 1.0),
+        );
+        let i = Intersection {
+            t: 1.0,
+            object: &tri,
+            u: 0.45,
+            v: 0.25,
+        };
+        let xs = vec![i];
+        let comps = IntersectionState::new(&xs[0], &r, &xs);
+        assert_eq!(Vector3D::new(-0.5547, 0.83205, 0.0), comps.normalv);
     }
 }

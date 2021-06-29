@@ -48,7 +48,7 @@ impl<'a> IntersectionState<'a> {
         let object = hit.object;
         let point = r.position(hit.t);
         let eyev = -r.direction();
-        let mut normalv = object.normal_at(&point);
+        let mut normalv = object.normal_at(&point, hit);
         let inside = if normalv.dot(&eyev) < 0.0 {
             normalv = -&normalv;
             true

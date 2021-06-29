@@ -89,7 +89,7 @@ impl Shape for Triangle {
         }]
     }
 
-    fn local_normal_at(&self, _p: &Point3D) -> Vector3D {
+    fn local_normal_at(&self, _p: &Point3D, _i: &Intersection) -> Vector3D {
         self.normal.clone()
     }
 }
@@ -121,10 +121,20 @@ mod tests {
             Point3D::new(-1.0, 0.0, 0.0),
             Point3D::new(1.0, 0.0, 0.0),
         );
+        let i = Intersection {
+            t: 0.0,
+            object: &Node::new(Box::new(Triangle::new(
+                Point3D::new(0.0, 0.0, 0.0),
+                Point3D::new(0.0, 0.0, 0.0),
+                Point3D::new(0.0, 0.0, 0.0),
+            ))),
+            u: 0.0,
+            v: 0.0,
+        };
 
-        let n1 = t.local_normal_at(&Point3D::new(0.0, 0.5, 0.0));
-        let n2 = t.local_normal_at(&Point3D::new(-0.5, 0.75, 0.0));
-        let n3 = t.local_normal_at(&Point3D::new(0.5, 0.25, 0.0));
+        let n1 = t.local_normal_at(&Point3D::new(0.0, 0.5, 0.0), &i);
+        let n2 = t.local_normal_at(&Point3D::new(-0.5, 0.75, 0.0), &i);
+        let n3 = t.local_normal_at(&Point3D::new(0.5, 0.25, 0.0), &i);
 
         assert_eq!(t.normal, n1);
         assert_eq!(t.normal, n2);

@@ -91,7 +91,7 @@ impl Shape for Cube {
         }
     }
 
-    fn local_normal_at(&self, p: &Point3D) -> Vector3D {
+    fn local_normal_at(&self, p: &Point3D, _: &Intersection) -> Vector3D {
         let maxc = p.x.abs().max(p.y.abs()).max(p.z.abs());
 
         if maxc == p.x.abs() {
@@ -224,45 +224,51 @@ mod tests {
     #[test]
     fn the_normal_on_the_surface_of_a_cube() {
         let c = Cube::new();
+        let i = Intersection {
+            t: 0.0,
+            object: &Node::new(Box::new(Cube::new())),
+            u: 0.0,
+            v: 0.0,
+        };
 
         let p = Point3D::new(1.0, 0.5, -0.8);
         let n = Vector3D::new(1.0, 0.0, 0.0);
-        let normal = c.local_normal_at(&p);
+        let normal = c.local_normal_at(&p, &i);
         assert_eq!(n, normal);
 
         let p = Point3D::new(-1.0, -0.2, 0.9);
         let n = Vector3D::new(-1.0, 0.0, 0.0);
-        let normal = c.local_normal_at(&p);
+        let normal = c.local_normal_at(&p, &i);
         assert_eq!(n, normal);
 
         let p = Point3D::new(-0.4, 1.0, -0.1);
         let n = Vector3D::new(0.0, 1.0, 0.0);
-        let normal = c.local_normal_at(&p);
+        let normal = c.local_normal_at(&p, &i);
         assert_eq!(n, normal);
 
         let p = Point3D::new(0.3, -1.0, -0.7);
         let n = Vector3D::new(0.0, -1.0, 0.0);
-        let normal = c.local_normal_at(&p);
+        let normal = c.local_normal_at(&p, &i);
         assert_eq!(n, normal);
 
         let p = Point3D::new(-0.6, 0.3, 1.0);
         let n = Vector3D::new(0.0, 0.0, 1.0);
-        let normal = c.local_normal_at(&p);
+        let normal = c.local_normal_at(&p, &i);
         assert_eq!(n, normal);
 
         let p = Point3D::new(0.4, 0.4, -1.0);
         let n = Vector3D::new(0.0, 0.0, -1.0);
-        let normal = c.local_normal_at(&p);
+        let normal = c.local_normal_at(&p, &i);
         assert_eq!(n, normal);
 
         let p = Point3D::new(1.0, 1.0, 1.0);
         let n = Vector3D::new(1.0, 0.0, 0.0);
-        let normal = c.local_normal_at(&p);
+        let normal = c.local_normal_at(&p, &i);
         assert_eq!(n, normal);
 
         let p = Point3D::new(-1.0, -1.0, -1.0);
         let n = Vector3D::new(-1.0, 0.0, 0.0);
-        let normal = c.local_normal_at(&p);
+        let normal = c.local_normal_at(&p, &i);
         assert_eq!(n, normal);
     }
 }
