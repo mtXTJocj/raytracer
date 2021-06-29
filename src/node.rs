@@ -36,6 +36,10 @@ impl Node {
         self.shape.add_child(child);
     }
 
+    pub fn child_at(&self, idx: usize) -> &Box<Node> {
+        self.shape.child_at(idx)
+    }
+
     /// 親 Node の座標系への変換を取得する
     pub fn transform(&self) -> &Transform {
         &self.transform
@@ -109,6 +113,12 @@ impl Node {
 #[cfg(test)]
 mod tests {
     use super::{super::group::Group, *};
+
+    impl Node {
+        pub(crate) fn shape(&self) -> &Box<dyn Shape> {
+            &self.shape
+        }
+    }
 
     #[test]
     fn creating_a_new_node() {

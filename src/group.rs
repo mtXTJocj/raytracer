@@ -21,6 +21,10 @@ impl Shape for Group {
         self.children.push(child);
     }
 
+    fn child_at(&self, idx: usize) -> &Box<Node> {
+        &self.children[idx]
+    }
+
     fn material(&self) -> &Material {
         panic!()
     }
