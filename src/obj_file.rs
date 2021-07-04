@@ -1,11 +1,14 @@
 use crate::{
-    group::Group, node::Node, point3d::Point3D, triangle::Triangle, FLOAT,
+    group::Group, node::Node, point3d::Point3D, shape::Shape,
+    smooth_triangle::SmoothTriangle, triangle::Triangle, vector3d::Vector3D,
+    FLOAT,
 };
 use std::{collections::BTreeMap, convert::From, io::BufRead};
 
 #[derive(Debug)]
 pub struct ObjParser {
     vertices: Vec<Point3D>,
+    normals: Vec<Vector3D>,
     default_group: Box<Node>,
     groups: BTreeMap<String, Box<Node>>,
 }
@@ -13,15 +16,39 @@ pub struct ObjParser {
 fn fan_triangulation(
     vertices: &Vec<Point3D>,
     indices: &Vec<usize>,
-) -> Vec<Triangle> {
-    let mut triangles = vec![];
+) -> Vec<Box<dyn Shape>> {
+    let mut triangles: Vec<Box<dyn Shape>> = vec![];
 
     for i in 1..indices.len() - 1 {
-        triangles.push(Triangle::new(
+        triangles.push(Box::new(Triangle::new(
             vertices[indices[0]].clone(),
             vertices[indices[i]].clone(),
             vertices[indices[i + 1]].clone(),
-        ));
+        )));
+    }
+
+    triangles
+}
+
+fn fan_triangulation_smooth(
+    vertices: &Vec<Point3D>,
+    vertex_indices: &Vec<usize>,
+    normals: &Vec<Vector3D>,
+    normal_indices: &Vec<usize>,
+) -> Vec<Box<dyn Shape>> {
+    assert_eq!(vertex_indices.len(), normal_indices.len());
+
+    let mut triangles: Vec<Box<dyn Shape>> = vec![];
+
+    for i in 1..vertex_indices.len() - 1 {
+        triangles.push(Box::new(SmoothTriangle::new(
+            vertices[vertex_indices[0]].clone(),
+            vertices[vertex_indices[i]].clone(),
+            vertices[vertex_indices[i + 1]].clone(),
+            normals[normal_indices[0]].clone(),
+            normals[normal_indices[i]].clone(),
+            normals[normal_indices[i + 1]].clone(),
+        )));
     }
 
     triangles
@@ -33,6 +60,7 @@ pub fn parse_obj_file(reader: &mut dyn BufRead) -> ObjParser {
 
     // 1-origin にする
     let mut vertices: Vec<Point3D> = vec![Point3D::new(0.0, 0.0, 0.0)];
+    let mut normals: Vec<Vector3D> = vec![Vector3D::new(0.0, 0.0, 0.0)];
 
     {
         let mut current_group = &mut default_group;
@@ -55,19 +83,52 @@ pub fn parse_obj_file(reader: &mut dyn BufRead) -> ObjParser {
                         ));
                     }
                 }
+                // vertex normal
+                "vn" => {
+                    if cs.len() >= 4 {
+                        normals.push(Vector3D::new(
+                            cs[1].parse::<FLOAT>().unwrap(),
+                            cs[2].parse::<FLOAT>().unwrap(),
+                            cs[3].parse::<FLOAT>().unwrap(),
+                        ));
+                    }
+                }
                 // face
                 "f" => {
                     if cs.len() >= 4 {
-                        let indices = cs[1..]
-                            .into_iter()
-                            .map(|i| {
-                                let face: Vec<&str> = i.split('/').collect();
-                                face[0].parse::<usize>().unwrap()
-                            })
-                            .collect();
-                        let triangles = fan_triangulation(&vertices, &indices);
+                        let mut use_smooth_triangle = true;
+                        let mut vertex_indices = vec![];
+                        let mut normal_indices = vec![];
+                        for i in 1..cs.len() {
+                            let face = &cs[i];
+                            let f: Vec<&str> = face.split('/').collect();
+                            vertex_indices.push(f[0].parse::<usize>().unwrap());
+                            if f.len() >= 3 {
+                                normal_indices
+                                    .push(f[2].parse::<usize>().unwrap());
+                            } else {
+                                use_smooth_triangle = false;
+                            }
+                        }
+
+                        let triangles;
+                        if use_smooth_triangle {
+                            assert_eq!(
+                                vertex_indices.len(),
+                                normal_indices.len()
+                            );
+                            triangles = fan_triangulation_smooth(
+                                &vertices,
+                                &vertex_indices,
+                                &normals,
+                                &normal_indices,
+                            );
+                        } else {
+                            triangles =
+                                fan_triangulation(&vertices, &vertex_indices);
+                        }
                         for t in triangles {
-                            current_group.add_child(Node::new(Box::new(t)));
+                            current_group.add_child(Node::new(t));
                         }
                     }
                 }
@@ -86,6 +147,7 @@ pub fn parse_obj_file(reader: &mut dyn BufRead) -> ObjParser {
 
     ObjParser {
         vertices,
+        normals,
         default_group,
         groups,
     }
@@ -253,5 +315,55 @@ f 1 3 4";
         assert_eq!(unsafe { (*t2).p1() }, &v1);
         assert_eq!(unsafe { (*t2).p2() }, &v3);
         assert_eq!(unsafe { (*t2).p3() }, &v4);
+    }
+
+    #[test]
+    fn vertex_normal_records() {
+        let mut file: &[u8] = b"vn 0 0 1
+    vn 0.707 0 -0.707
+    vn 1 2 3";
+
+        let parser = parse_obj_file(&mut file);
+        assert_eq!(Vector3D::new(0.0, 0.0, 1.0), parser.normals[1]);
+        assert_eq!(Vector3D::new(0.707, 0.0, -0.707), parser.normals[2]);
+        assert_eq!(Vector3D::new(1.0, 2.0, 3.0), parser.normals[3]);
+    }
+
+    #[test]
+    fn faces_with_normals() {
+        let mut file: &[u8] = b"v 0 1 0
+    v -1 0 0
+    v 1 0 0
+
+    vn -1 0 0
+    vn 1 0 0
+    vn 0 1 0
+
+    f 1//3 2//1 3//2
+    f 1/0/3 2/102/1 3/14/2
+";
+
+        let parser = parse_obj_file(&mut file);
+        let g = &parser.default_group;
+        let t1 = g.child_at(0);
+        let t1 = t1.shape();
+        let t1 = &(**t1) as *const _ as *const SmoothTriangle;
+
+        assert_eq!(unsafe { (*t1).p1() }, &parser.vertices[1]);
+        assert_eq!(unsafe { (*t1).p2() }, &parser.vertices[2]);
+        assert_eq!(unsafe { (*t1).p3() }, &parser.vertices[3]);
+        assert_eq!(unsafe { (*t1).n1() }, &parser.normals[3]);
+        assert_eq!(unsafe { (*t1).n2() }, &parser.normals[1]);
+        assert_eq!(unsafe { (*t1).n3() }, &parser.normals[2]);
+
+        let t2 = g.child_at(1);
+        let t2 = t2.shape();
+        let t2 = &(**t2) as *const _ as *const SmoothTriangle;
+        assert_eq!(unsafe { (*t1).p1() }, unsafe { (*t2).p1() });
+        assert_eq!(unsafe { (*t1).p2() }, unsafe { (*t2).p2() });
+        assert_eq!(unsafe { (*t1).p3() }, unsafe { (*t2).p3() });
+        assert_eq!(unsafe { (*t1).n1() }, unsafe { (*t2).n1() });
+        assert_eq!(unsafe { (*t1).n2() }, unsafe { (*t2).n2() });
+        assert_eq!(unsafe { (*t1).n3() }, unsafe { (*t2).n3() });
     }
 }
