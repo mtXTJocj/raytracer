@@ -13,6 +13,10 @@ pub trait Shape: Debug {
         panic!();
     }
 
+    fn child_at(&self, _idx: usize) -> &Box<Node> {
+        panic!();
+    }
+
     /// Material を取得する
     fn material(&self) -> &Material;
     /// Material を取得する
@@ -32,7 +36,8 @@ pub trait Shape: Debug {
     ///
     /// # Argumets
     /// * `p` - local 座標系上の点
-    fn local_normal_at(&self, p: &Point3D) -> Vector3D;
+    /// * `i` - Ray との交点に関する情報
+    fn local_normal_at(&self, p: &Point3D, i: &Intersection) -> Vector3D;
 }
 
 #[cfg(test)]
@@ -73,7 +78,7 @@ mod tests {
             vec![]
         }
 
-        fn local_normal_at(&self, p: &Point3D) -> Vector3D {
+        fn local_normal_at(&self, p: &Point3D, _: &Intersection) -> Vector3D {
             Vector3D::new(p.x, p.y, p.z)
         }
     }
@@ -140,7 +145,15 @@ mod tests {
     fn computing_the_normal_on_a_translated_shape() {
         let mut s = Node::new(Box::new(test_shape()));
         s.set_transform(Transform::translation(0.0, 1.0, 0.0));
-        let n = s.normal_at(&Point3D::new(0.0, 1.70711, -0.70711));
+        let n = s.normal_at(
+            &Point3D::new(0.0, 1.70711, -0.70711),
+            &Intersection {
+                t: 0.0,
+                object: &s,
+                u: 0.0,
+                v: 0.0,
+            },
+        );
 
         assert_eq!(Vector3D::new(0.0, 0.70711, -0.70711), n);
     }
@@ -152,11 +165,19 @@ mod tests {
             &Transform::scaling(1.0, 0.5, 1.0)
                 * &Transform::rotation_z(std::f32::consts::PI as FLOAT / 5.0),
         );
-        let n = s.normal_at(&Point3D::new(
-            0.0,
-            2f32.sqrt() as FLOAT / 2.0,
-            -2f32.sqrt() as FLOAT / 2.0,
-        ));
+        let n = s.normal_at(
+            &Point3D::new(
+                0.0,
+                2f32.sqrt() as FLOAT / 2.0,
+                -2f32.sqrt() as FLOAT / 2.0,
+            ),
+            &Intersection {
+                t: 0.0,
+                object: &s,
+                u: 0.0,
+                v: 0.0,
+            },
+        );
 
         assert_eq!(Vector3D::new(0.0, 0.97014, -0.24254), n);
     }

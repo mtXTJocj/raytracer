@@ -75,14 +75,24 @@ impl Cone {
         // by intersecting the ray with the plane at y = cyl.minimum
         let t = (self.minimum() - r.origin().y) / r.direction().y;
         if check_cap(&r, t) {
-            xs.push(Intersection { t: t, object: n });
+            xs.push(Intersection {
+                t: t,
+                object: n,
+                u: 0.0,
+                v: 0.0,
+            });
         }
 
         // check for an intersection with the upper end cap
         // by intersecting the ray with the plane at y = cyl.maximum
         let t = (self.maximum() - r.origin().y) / r.direction().y;
         if check_cap(&r, t) {
-            xs.push(Intersection { t: t, object: n });
+            xs.push(Intersection {
+                t: t,
+                object: n,
+                u: 0.0,
+                v: 0.0,
+            });
         }
     }
 }
@@ -111,7 +121,12 @@ impl Shape for Cone {
         if approx_eq(0.0, a) {
             if !approx_eq(0.0, b) {
                 let t = -c / (2.0 * b);
-                xs.push(Intersection { t: t, object: n });
+                xs.push(Intersection {
+                    t: t,
+                    object: n,
+                    u: 0.0,
+                    v: 0.0,
+                });
             }
         } else {
             let disc = b * b - 4.0 * a * c;
@@ -124,11 +139,21 @@ impl Shape for Cone {
 
                 let y0 = o.y + t0 * d.y;
                 if self.minimum() < y0 && y0 < self.maximum() {
-                    xs.push(Intersection { t: t0, object: n });
+                    xs.push(Intersection {
+                        t: t0,
+                        object: n,
+                        u: 0.0,
+                        v: 0.0,
+                    });
                 }
                 let y1 = o.y + t1 * d.y;
                 if self.minimum() < y1 && y1 < self.maximum() {
-                    xs.push(Intersection { t: t1, object: n });
+                    xs.push(Intersection {
+                        t: t1,
+                        object: n,
+                        u: 0.0,
+                        v: 0.0,
+                    });
                 }
             }
         }
@@ -137,7 +162,7 @@ impl Shape for Cone {
         xs
     }
 
-    fn local_normal_at(&self, p: &Point3D) -> Vector3D {
+    fn local_normal_at(&self, p: &Point3D, _: &Intersection) -> Vector3D {
         let mut y = (p.x * p.x + p.z * p.z).sqrt();
         if y < 0.0 {
             y = -y;
@@ -232,14 +257,20 @@ mod tests {
     #[test]
     fn computing_the_normal_vector_on_a_cone() {
         let shape = Cone::new();
+        let i = Intersection {
+            t: 0.0,
+            object: &Node::new(Box::new(Cone::new())),
+            u: 0.0,
+            v: 0.0,
+        };
 
-        let n = shape.local_normal_at(&Point3D::new(0.0, 0.0, 0.0));
+        let n = shape.local_normal_at(&Point3D::new(0.0, 0.0, 0.0), &i);
         assert_eq!(Vector3D::new(0.0, 0.0, 0.0), n);
 
-        let n = shape.local_normal_at(&Point3D::new(1.0, 1.0, 1.0));
+        let n = shape.local_normal_at(&Point3D::new(1.0, 1.0, 1.0), &i);
         assert_eq!(Vector3D::new(1.0, 2f64.sqrt() as FLOAT, 1.0), n);
 
-        let n = shape.local_normal_at(&Point3D::new(-1.0, -1.0, 0.0));
+        let n = shape.local_normal_at(&Point3D::new(-1.0, -1.0, 0.0), &i);
         assert_eq!(Vector3D::new(-1.0, 1.0, 0.0), n);
     }
 
@@ -249,23 +280,29 @@ mod tests {
         *shape.minimum_mut() = -1.0;
         *shape.maximum_mut() = 2.0;
         *shape.closed_mut() = true;
+        let i = Intersection {
+            t: 0.0,
+            object: &Node::new(Box::new(Cone::new())),
+            u: 0.0,
+            v: 0.0,
+        };
 
-        let n = shape.local_normal_at(&Point3D::new(0.0, -1.0, 0.0));
+        let n = shape.local_normal_at(&Point3D::new(0.0, -1.0, 0.0), &i);
         assert_eq!(Vector3D::new(0.0, -1.0, 0.0), n);
 
-        let n = shape.local_normal_at(&Point3D::new(0.9, -1.0, 0.0));
+        let n = shape.local_normal_at(&Point3D::new(0.9, -1.0, 0.0), &i);
         assert_eq!(Vector3D::new(0.0, -1.0, 0.0), n);
 
-        let n = shape.local_normal_at(&Point3D::new(0.0, -1.0, 0.9));
+        let n = shape.local_normal_at(&Point3D::new(0.0, -1.0, 0.9), &i);
         assert_eq!(Vector3D::new(0.0, -1.0, 0.0), n);
 
-        let n = shape.local_normal_at(&Point3D::new(0.0, 2.0, 0.0));
+        let n = shape.local_normal_at(&Point3D::new(0.0, 2.0, 0.0), &i);
         assert_eq!(Vector3D::new(0.0, 1.0, 0.0), n);
 
-        let n = shape.local_normal_at(&Point3D::new(1.9, 2.0, 0.0));
+        let n = shape.local_normal_at(&Point3D::new(1.9, 2.0, 0.0), &i);
         assert_eq!(Vector3D::new(0.0, 1.0, 0.0), n);
 
-        let n = shape.local_normal_at(&Point3D::new(0.0, 2.0, 1.9));
+        let n = shape.local_normal_at(&Point3D::new(0.0, 2.0, 1.9), &i);
         assert_eq!(Vector3D::new(0.0, 1.0, 0.0), n);
     }
 }

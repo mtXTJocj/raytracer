@@ -7,6 +7,8 @@ pub struct Intersection<'a> {
     pub t: FLOAT,
     /// Ray と交差したオブジェクト
     pub object: &'a Node,
+    pub(crate) u: FLOAT,
+    pub(crate) v: FLOAT,
 }
 
 /// 複数の交点のうち、Ray の始点よりも先で最も手前にあるものを返す。
@@ -23,7 +25,7 @@ pub fn hit<'a, 'b>(
     for x in xs {
         if 0.0 <= x.t && x.t < min_t {
             min_t = x.t;
-            result = Some(x)
+            result = Some(x);
         }
     }
     result
@@ -42,7 +44,12 @@ mod tests {
     #[test]
     fn an_intersection_encapsulates_t_and_object() {
         let s = Node::new(Box::new(Sphere::new()));
-        let i = Intersection { t: 3.5, object: &s };
+        let i = Intersection {
+            t: 3.5,
+            object: &s,
+            u: 0.0,
+            v: 0.0,
+        };
 
         assert_eq!(3.5, i.t);
         assert!(std::ptr::eq(&s as &Node, i.object));
@@ -51,8 +58,18 @@ mod tests {
     #[test]
     fn aggregating_intersections() {
         let s = Node::new(Box::new(Sphere::new()));
-        let i1 = Intersection { t: 1.0, object: &s };
-        let i2 = Intersection { t: 2.0, object: &s };
+        let i1 = Intersection {
+            t: 1.0,
+            object: &s,
+            u: 0.0,
+            v: 0.0,
+        };
+        let i2 = Intersection {
+            t: 2.0,
+            object: &s,
+            u: 0.0,
+            v: 0.0,
+        };
         let xs = vec![i1, i2];
 
         assert_eq!(2, xs.len());
@@ -63,8 +80,18 @@ mod tests {
     #[test]
     fn the_hit_when_all_intersections_have_positive_t() {
         let s = Node::new(Box::new(Sphere::new()));
-        let i1 = Intersection { t: 1.0, object: &s };
-        let i2 = Intersection { t: 2.0, object: &s };
+        let i1 = Intersection {
+            t: 1.0,
+            object: &s,
+            u: 0.0,
+            v: 0.0,
+        };
+        let i2 = Intersection {
+            t: 2.0,
+            object: &s,
+            u: 0.0,
+            v: 0.0,
+        };
         let xs = vec![i2, i1];
 
         if let Some(i) = hit(&xs) {
@@ -80,8 +107,15 @@ mod tests {
         let i1 = Intersection {
             t: -1.0,
             object: &s,
+            u: 0.0,
+            v: 0.0,
         };
-        let i2 = Intersection { t: 1.0, object: &s };
+        let i2 = Intersection {
+            t: 1.0,
+            object: &s,
+            u: 0.0,
+            v: 0.0,
+        };
         let xs = vec![i2, i1];
 
         if let Some(i) = hit(&xs) {
@@ -97,10 +131,14 @@ mod tests {
         let i1 = Intersection {
             t: -2.0,
             object: &s,
+            u: 0.0,
+            v: 0.0,
         };
         let i2 = Intersection {
             t: -1.0,
             object: &s,
+            u: 0.0,
+            v: 0.0,
         };
         let xs = vec![i2, i1];
 
@@ -111,13 +149,30 @@ mod tests {
     #[test]
     fn the_hit_is_always_the_lowest_nonnegative_intersection() {
         let s = Node::new(Box::new(Sphere::new()));
-        let i1 = Intersection { t: 5.0, object: &s };
-        let i2 = Intersection { t: 7.0, object: &s };
+        let i1 = Intersection {
+            t: 5.0,
+            object: &s,
+            u: 0.0,
+            v: 0.0,
+        };
+        let i2 = Intersection {
+            t: 7.0,
+            object: &s,
+            u: 0.0,
+            v: 0.0,
+        };
         let i3 = Intersection {
             t: -3.0,
             object: &s,
+            u: 0.0,
+            v: 0.0,
         };
-        let i4 = Intersection { t: 2.0, object: &s };
+        let i4 = Intersection {
+            t: 2.0,
+            object: &s,
+            u: 0.0,
+            v: 0.0,
+        };
         let xs = vec![i1, i2, i3, i4];
 
         if let Some(i) = hit(&xs) {
@@ -138,9 +193,25 @@ mod tests {
         let i = Intersection {
             t: 5.0,
             object: &node,
+            u: 0.0,
+            v: 0.0,
         };
 
         let comps = IntersectionState::new(&i, &r, &vec![]);
         assert!(comps.over_point.z < EPSILON / 2.0);
+    }
+
+    #[test]
+    fn an_intersection_can_encapsulate_u_and_v() {
+        let mut node = Node::new(Box::new(Sphere::new()));
+        let i = Intersection {
+            t: 3.5,
+            object: &node,
+            u: 0.2,
+            v: 0.4,
+        };
+
+        assert_eq!(0.2, i.u);
+        assert_eq!(0.4, i.v);
     }
 }

@@ -36,6 +36,10 @@ impl Node {
         self.shape.add_child(child);
     }
 
+    pub fn child_at(&self, idx: usize) -> &Box<Node> {
+        self.shape.child_at(idx)
+    }
+
     /// 親 Node の座標系への変換を取得する
     pub fn transform(&self) -> &Transform {
         &self.transform
@@ -98,9 +102,10 @@ impl Node {
     ///
     /// # Argumets
     /// * `p` - self 上の点
-    pub fn normal_at(&self, p: &Point3D) -> Vector3D {
+    /// * `i` - Ray との交点に関する情報
+    pub fn normal_at(&self, p: &Point3D, i: &Intersection) -> Vector3D {
         let local_point = self.world_to_object(p);
-        let local_normal = self.shape.local_normal_at(&local_point);
+        let local_normal = self.shape.local_normal_at(&local_point, i);
 
         self.normal_to_world(&local_normal)
     }
@@ -109,6 +114,12 @@ impl Node {
 #[cfg(test)]
 mod tests {
     use super::{super::group::Group, *};
+
+    impl Node {
+        pub(crate) fn shape(&self) -> &Box<dyn Shape> {
+            &self.shape
+        }
+    }
 
     #[test]
     fn creating_a_new_node() {

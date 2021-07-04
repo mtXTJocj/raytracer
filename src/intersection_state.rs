@@ -4,6 +4,7 @@ use super::{
 };
 
 /// 交点における色の計算に必要な情報
+#[derive(Debug)]
 pub struct IntersectionState<'a> {
     /// Ray と object が交差する場所での t
     pub(crate) t: FLOAT,
@@ -48,7 +49,7 @@ impl<'a> IntersectionState<'a> {
         let object = hit.object;
         let point = r.position(hit.t);
         let eyev = -r.direction();
-        let mut normalv = object.normal_at(&point);
+        let mut normalv = object.normal_at(&point, hit);
         let inside = if normalv.dot(&eyev) < 0.0 {
             normalv = -&normalv;
             true
@@ -155,6 +156,8 @@ mod tests {
         let i = Intersection {
             t: 4.0,
             object: &node,
+            u: 0.0,
+            v: 0.0,
         };
 
         let comps = IntersectionState::new(&i, &r, &vec![]);
@@ -174,6 +177,8 @@ mod tests {
         let i = Intersection {
             t: 4.0,
             object: &node,
+            u: 0.0,
+            v: 0.0,
         };
 
         let comps = IntersectionState::new(&i, &r, &vec![]);
@@ -188,6 +193,8 @@ mod tests {
         let i = Intersection {
             t: 1.0,
             object: &node,
+            u: 0.0,
+            v: 0.0,
         };
 
         let comps = IntersectionState::new(&i, &r, &vec![]);
@@ -211,6 +218,8 @@ mod tests {
         let i = Intersection {
             t: 2f32.sqrt() as FLOAT,
             object: &node,
+            u: 0.0,
+            v: 0.0,
         };
         let comps = IntersectionState::new(&i, &r, &vec![]);
 
@@ -246,24 +255,42 @@ mod tests {
             Vector3D::new(0.0, 0.0, 1.0),
         );
         let xs = vec![
-            Intersection { t: 2.0, object: &a },
+            Intersection {
+                t: 2.0,
+                object: &a,
+                u: 0.0,
+                v: 0.0,
+            },
             Intersection {
                 t: 2.75,
                 object: &b,
+                u: 0.0,
+                v: 0.0,
             },
             Intersection {
                 t: 3.25,
                 object: &c,
+                u: 0.0,
+                v: 0.0,
             },
             Intersection {
                 t: 4.75,
                 object: &b,
+                u: 0.0,
+                v: 0.0,
             },
             Intersection {
                 t: 5.25,
                 object: &c,
+                u: 0.0,
+                v: 0.0,
             },
-            Intersection { t: 6.0, object: &a },
+            Intersection {
+                t: 6.0,
+                object: &a,
+                u: 0.0,
+                v: 0.0,
+            },
         ];
 
         let c = IntersectionState::new(&xs[0], &r, &xs);
@@ -302,6 +329,8 @@ mod tests {
         let i = Intersection {
             t: 5.0,
             object: &node,
+            u: 0.0,
+            v: 0.0,
         };
         let xs = vec![i];
 
@@ -321,10 +350,14 @@ mod tests {
             Intersection {
                 t: -2f32.sqrt() as FLOAT / 2.0,
                 object: &node,
+                u: 0.0,
+                v: 0.0,
             },
             Intersection {
                 t: 2f32.sqrt() as FLOAT / 2.0,
                 object: &node,
+                u: 0.0,
+                v: 0.0,
             },
         ];
         let comps = IntersectionState::new(&xs[1], &r, &xs);
@@ -341,10 +374,14 @@ mod tests {
             Intersection {
                 t: -1.0,
                 object: &node,
+                u: 0.0,
+                v: 0.0,
             },
             Intersection {
                 t: 1.0,
                 object: &node,
+                u: 0.0,
+                v: 0.0,
             },
         ];
         let comps = IntersectionState::new(&xs[1], &r, &xs);
@@ -363,6 +400,8 @@ mod tests {
         let xs = vec![Intersection {
             t: 1.8589,
             object: &node,
+            u: 0.0,
+            v: 0.0,
         }];
         let comps = IntersectionState::new(&xs[0], &r, &xs);
         let reflectance = comps.schlick();

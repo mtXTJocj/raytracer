@@ -292,6 +292,8 @@ mod tests {
         let i = Intersection {
             t: 4.0,
             object: shape,
+            u: 0.0,
+            v: 0.0,
         };
         let comps = IntersectionState::new(&i, &r, &vec![]);
 
@@ -309,6 +311,8 @@ mod tests {
         let i = Intersection {
             t: 0.5,
             object: shape,
+            u: 0.0,
+            v: 0.0,
         };
         let comps = IntersectionState::new(&i, &r, &vec![]);
         let c = w.shade_hit(&comps, 1);
@@ -332,6 +336,8 @@ mod tests {
         let i = Intersection {
             t: 4.0,
             object: shape,
+            u: 0.0,
+            v: 0.0,
         };
         let comps = IntersectionState::new(&i, &r, &vec![]);
 
@@ -435,6 +441,8 @@ mod tests {
         let i = Intersection {
             t: 4.0,
             object: &w.nodes[1],
+            u: 0.0,
+            v: 0.0,
         };
         let comps = IntersectionState::new(&i, &r, &vec![]);
         let c = w.shade_hit(&comps, 1);
@@ -451,6 +459,8 @@ mod tests {
         let i = Intersection {
             t: 1.0,
             object: &w.nodes[1],
+            u: 0.0,
+            v: 0.0,
         };
         let comps = IntersectionState::new(&i, &r, &vec![]);
         let color = w.reflected_color(&comps, 1);
@@ -476,6 +486,8 @@ mod tests {
         let i = Intersection {
             t: 2f32.sqrt() as FLOAT,
             object: &w.nodes[2],
+            u: 0.0,
+            v: 0.0,
         };
         let comps = IntersectionState::new(&i, &r, &vec![]);
         let color = w.reflected_color(&comps, 1);
@@ -501,6 +513,8 @@ mod tests {
         let i = Intersection {
             t: 2f32.sqrt() as FLOAT,
             object: &w.nodes[2],
+            u: 0.0,
+            v: 0.0,
         };
         let comps = IntersectionState::new(&i, &r, &vec![]);
         let color = w.shade_hit(&comps, 1);
@@ -548,6 +562,8 @@ mod tests {
         let i = Intersection {
             t: 2f32.sqrt() as FLOAT,
             object: &w.nodes[2],
+            u: 0.0,
+            v: 0.0,
         };
         let comps = IntersectionState::new(&i, &r, &vec![]);
         let color = w.reflected_color(&comps, 0);
@@ -567,10 +583,14 @@ mod tests {
             Intersection {
                 t: 4.0,
                 object: shape,
+                u: 0.0,
+                v: 0.0,
             },
             Intersection {
                 t: 6.0,
                 object: shape,
+                u: 0.0,
+                v: 0.0,
             },
         ];
         let comps = IntersectionState::new(&xs[0], &r, &xs);
@@ -591,10 +611,14 @@ mod tests {
             Intersection {
                 t: 4.0,
                 object: &w.nodes[0],
+                u: 0.0,
+                v: 0.0,
             },
             Intersection {
                 t: 6.0,
                 object: &w.nodes[0],
+                u: 0.0,
+                v: 0.0,
             },
         ];
         let comps = IntersectionState::new(&xs[0], &r, &xs);
@@ -615,10 +639,14 @@ mod tests {
             Intersection {
                 t: -2f32.sqrt() as FLOAT / 2.0,
                 object: &w.nodes[0],
+                u: 0.0,
+                v: 0.0,
             },
             Intersection {
                 t: 2f32.sqrt() as FLOAT / 2.0,
                 object: &w.nodes[0],
+                u: 0.0,
+                v: 0.0,
             },
         ];
 
@@ -644,18 +672,26 @@ mod tests {
             Intersection {
                 t: -0.9899,
                 object: &w.nodes[0],
+                u: 0.0,
+                v: 0.0,
             },
             Intersection {
                 t: -0.4899,
                 object: &w.nodes[1],
+                u: 0.0,
+                v: 0.0,
             },
             Intersection {
                 t: 0.4899,
                 object: &w.nodes[1],
+                u: 0.0,
+                v: 0.0,
             },
             Intersection {
                 t: 0.9899,
                 object: &w.nodes[0],
+                u: 0.0,
+                v: 0.0,
             },
         ];
 
@@ -691,6 +727,8 @@ mod tests {
         let xs = vec![Intersection {
             t: 2f32.sqrt() as FLOAT,
             object: &w.nodes[2],
+            u: 0.0,
+            v: 0.0,
         }];
         let comps = IntersectionState::new(&xs[0], &r, &xs);
         let color = w.shade_hit(&comps, 5);
@@ -726,6 +764,8 @@ mod tests {
         let xs = vec![Intersection {
             t: 2f32.sqrt() as FLOAT,
             object: &w.nodes[2],
+            u: 0.0,
+            v: 0.0,
         }];
         let comps = IntersectionState::new(&xs[0], &r, &xs);
         let color = w.shade_hit(&comps, 5);

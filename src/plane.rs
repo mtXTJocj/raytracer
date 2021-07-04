@@ -37,10 +37,15 @@ impl Shape for Plane {
         }
 
         let t = -r.origin().y / r.direction().y;
-        vec![Intersection { t, object: n }]
+        vec![Intersection {
+            t,
+            object: n,
+            u: 0.0,
+            v: 0.0,
+        }]
     }
 
-    fn local_normal_at(&self, _: &Point3D) -> Vector3D {
+    fn local_normal_at(&self, _: &Point3D, _: &Intersection) -> Vector3D {
         Vector3D::new(0.0, 1.0, 0.0)
     }
 }
@@ -52,9 +57,15 @@ mod tests {
     #[test]
     fn the_normal_of_a_plane_is_constant_everywhere() {
         let p = Plane::new();
-        let n1 = p.local_normal_at(&Point3D::new(0.0, 0.0, 0.0));
-        let n2 = p.local_normal_at(&Point3D::new(10.0, 0.0, -10.0));
-        let n3 = p.local_normal_at(&Point3D::new(-5.0, 0.0, 150.0));
+        let i = Intersection {
+            t: 0.0,
+            object: &Node::new(Box::new(Plane::new())),
+            u: 0.0,
+            v: 0.0,
+        };
+        let n1 = p.local_normal_at(&Point3D::new(0.0, 0.0, 0.0), &i);
+        let n2 = p.local_normal_at(&Point3D::new(10.0, 0.0, -10.0), &i);
+        let n3 = p.local_normal_at(&Point3D::new(-5.0, 0.0, 150.0), &i);
 
         assert_eq!(Vector3D::new(0.0, 1.0, 0.0), n1);
         assert_eq!(Vector3D::new(0.0, 1.0, 0.0), n2);
