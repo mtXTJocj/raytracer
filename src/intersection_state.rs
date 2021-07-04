@@ -4,6 +4,7 @@ use super::{
 };
 
 /// 交点における色の計算に必要な情報
+#[derive(Debug)]
 pub struct IntersectionState<'a> {
     /// Ray と object が交差する場所での t
     pub(crate) t: FLOAT,
