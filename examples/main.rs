@@ -11,18 +11,39 @@ use std::{
     io::{stdout, BufReader, BufWriter, Write},
 };
 
+use clap::{App, Arg};
+
 fn main() {
-    let mut writer: Box<dyn Write> = match env::args().nth(1) {
-        None => Box::new(BufWriter::new(stdout())),
-        Some(filename) => Box::new(BufWriter::new(
-            File::create(filename).expect("cannot create file"),
-        )),
-    };
+    let matches = App::new("raytracer")
+        .arg(
+            Arg::with_name("input")
+                .help("input filename")
+                .required(true)
+                .index(1),
+        )
+        .arg(
+            Arg::with_name("output")
+                .short("o")
+                .value_name("FILE")
+                .help("ppm filename to be output")
+                .takes_value(true),
+        )
+        .get_matches();
+
+    let mut writer: Box<dyn Write> =
+        if let Some(filename) = matches.value_of("output") {
+            Box::new(BufWriter::new(
+                File::create(filename).expect("cannot create file"),
+            ))
+        } else {
+            Box::new(BufWriter::new(stdout()))
+        };
 
     let mut world = World::new();
 
     let mut reader = BufReader::new(
-        File::open("./teapot-low.obj").expect("cannot open file"),
+        File::open(matches.value_of("input").unwrap())
+            .expect("cannot open file"),
     );
     let parser = parse_obj_file(&mut reader);
     let mut group: Box<Node> = parser.into();
