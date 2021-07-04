@@ -25,7 +25,7 @@ pub fn hit<'a, 'b>(
     for x in xs {
         if 0.0 <= x.t && x.t < min_t {
             min_t = x.t;
-            result = Some(x)
+            result = Some(x);
         }
     }
     result
